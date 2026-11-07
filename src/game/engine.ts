@@ -3,6 +3,8 @@
 // التايمر مبني على الوقت الفعلي (Date.now) مش عدّاد لفات، عشان ميحصلش تسريع
 // أو بطء. كل دخول للقضية أو تحديث للصفحة بيبدأ جولة جديدة من مرحلة القراءة —
 // مفيش استكمال لجولة قديمة، بس سجل الإدانة (الفوز) محفوظ على الجهاز.
+// الأدلة: أول دليل يظهر فور بدء التحقيق، والباقي في أظرف مختومة بيفتحها اللاعب
+// عند الطلب والتايمر شغال — فتح أظرف أقل يرفع التقييم النهائي.
 // ============================================================================
 
 import { useEffect, useMemo, useReducer, useRef } from 'react';
@@ -11,13 +13,11 @@ import type { CaseData } from './cases';
 // ---- أرقام الجولة القابلة للضبط (تتظبط بعد تجربة اللعب) -------------------
 export interface GameSettings {
     roundSeconds: number;          // مدة الجولة كاملة
-    clueIntervalSeconds: number;   // كل قد إيه يظهر دليل جديد
     wrongAccusePenaltySeconds: number; // خصم الاتهام الغلط
 }
 
 export const DEFAULT_SETTINGS: GameSettings = {
     roundSeconds: 180,
-    clueIntervalSeconds: 25,
     wrongAccusePenaltySeconds: 20,
 };
 
@@ -31,6 +31,7 @@ export interface RoundState {
     excluded: string[];        // المشتبه فيهم المستبعدون
     selected: string | null;   // المتهم المختار
     wrongAccusations: number;
+    openedClues: number;       // عدد الأظرف اللي اللاعب فتحها (غير أول دليل الفوري)
     withExtraClue: boolean;    // جولة إعادة بعد خسارة مع دليل إضافي
     wonWithRemainingMs: number;
     lastWrongAt: number;       // طابع آخر اتهام غلط (لتأثير الواجهة)
@@ -40,6 +41,7 @@ export type RoundAction =
     | { type: 'exclude'; suspectId: string }
     | { type: 'undoExclude'; suspectId: string }
     | { type: 'select'; suspectId: string | null }
+    | { type: 'openClue'; maxTotal: number }
     | { type: 'accuse'; suspectId: string; culpritId: string; penaltyMs: number }
     | { type: 'timeout' }
     | { type: 'restart'; withExtraClue: boolean }
@@ -57,6 +59,7 @@ function freshRound(withExtraClue: boolean): RoundState {
         excluded: [],
         selected: null,
         wrongAccusations: 0,
+        openedClues: 0,
         withExtraClue,
         wonWithRemainingMs: 0,
         lastWrongAt: 0,
@@ -73,12 +76,11 @@ export function remainingMsOf(s: RoundState, settings: GameSettings, now: number
     return settings.roundSeconds * 1000 - elapsedMsOf(s, now) - s.penaltyMs;
 }
 
-// عدد الأدلة الظاهرة: أول دليل فوري، وكل دليل وراه بعد فاصل ثابت.
-export function revealedCountOf(s: RoundState, settings: GameSettings, totalClues: number, now: number): number {
+// عدد الأدلة الظاهرة: أول دليل فوري عند بدء التحقيق، والباقي بيتحكم فيه اللاعب
+// عن طريق فتح الأظرف المختومة — مفيش ظهور تلقائي بالوقت.
+export function revealedCountOf(s: RoundState, totalClues: number): number {
     if (s.status === 'reading') return 0; // مفيش أدلة قبل بدء التحقيق
-    const elapsed = elapsedMsOf(s, now) / 1000;
-    const byTime = 1 + Math.floor(elapsed / settings.clueIntervalSeconds);
-    return Math.max(1, Math.min(totalClues, byTime));
+    return Math.max(1, Math.min(totalClues, 1 + s.openedClues));
 }
 
 function reducer(s: RoundState, a: RoundAction): RoundState {
@@ -96,6 +98,10 @@ function reducer(s: RoundState, a: RoundAction): RoundState {
         case 'select':
             if (s.status !== 'playing' || s.excluded.includes(a.suspectId ?? '')) return s;
             return { ...s, selected: a.suspectId };
+        case 'openClue':
+            // فتح ظرف: التايمر مبيقفش — الفتح قرار اللاعب، وتأثيره على التقييم مش على الوقت.
+            if (s.status !== 'playing' || 1 + s.openedClues >= a.maxTotal) return s;
+            return { ...s, openedClues: s.openedClues + 1 };
         case 'accuse': {
             if (s.status !== 'playing' || s.excluded.includes(a.suspectId)) return s;
             // حماية من الضغط المتكرر السريع: اتهام واحد كل ١٫٥ ثانية كحد أقصى.
@@ -163,13 +169,14 @@ export interface EngineApi {
     revealedCount: number;
     totalClues: number;
     visibleClues: CaseData['clues'];
-    nextClueInMs: number | null;
+    envelopesRemaining: number; // أظرف لسه مقفولة
     exclude: (id: string) => void;
     undoExclude: (id: string) => void;
     select: (id: string | null) => void;
     accuse: (id: string) => void;
     restart: (withExtraClue: boolean) => void;
     start: () => void;
+    openClue: () => void;
 }
 
 export function useGameEngine(caseData: CaseData, settings: GameSettings = DEFAULT_SETTINGS): EngineApi {
@@ -206,12 +213,8 @@ export function useGameEngine(caseData: CaseData, settings: GameSettings = DEFAU
         () => (state.withExtraClue ? [...caseData.clues, caseData.extraClue] : caseData.clues),
         [caseData, state.withExtraClue],
     );
-    const revealedCount = revealedCountOf(state, settings, allClues.length, now);
-    const nextClueInMs = useMemo(() => {
-        if (state.status !== 'playing' || revealedCount >= allClues.length) return null;
-        const nextAt = revealedCount * settings.clueIntervalSeconds * 1000; // دليل رقم n بيظهر عند n * الفاصل
-        return Math.max(0, nextAt - elapsedMsOf(state, now));
-    }, [state, revealedCount, allClues.length, settings.clueIntervalSeconds, now]);
+    const revealedCount = revealedCountOf(state, allClues.length);
+    const envelopesRemaining = Math.max(0, allClues.length - revealedCount);
 
     return {
         state,
@@ -221,13 +224,14 @@ export function useGameEngine(caseData: CaseData, settings: GameSettings = DEFAU
         revealedCount,
         totalClues: allClues.length,
         visibleClues: allClues.slice(0, revealedCount),
-        nextClueInMs,
+        envelopesRemaining,
         exclude: (id) => dispatch({ type: 'exclude', suspectId: id }),
         undoExclude: (id) => dispatch({ type: 'undoExclude', suspectId: id }),
         select: (id) => dispatch({ type: 'select', suspectId: id }),
         accuse: (id) => dispatch({ type: 'accuse', suspectId: id, culpritId: caseData.culpritId, penaltyMs: settings.wrongAccusePenaltySeconds * 1000 }),
         restart: (withExtra) => { clearSavedRound(caseData.id); dispatch({ type: 'restart', withExtraClue: withExtra }); },
         start: () => dispatch({ type: 'start' }),
+        openClue: () => dispatch({ type: 'openClue', maxTotal: allClues.length }),
     };
 }
 
