@@ -1,18 +1,83 @@
 // ============================================================================
-// شاشة الدخول — شكلية في النسخة التجريبية: مفيش تحقق حقيقي ولا حفظ لأي بيانات.
+// شاشة الدخول وإنشاء الحساب — حسابات حقيقية عبر نظام المصادقة:
+// إنشاء حساب (اسم/بريد/كلمة سر/تأكيد) أو تسجيل دخول، وكل لاعب ليه سجله الخاص.
 // ============================================================================
 
 import React, { useState } from 'react';
 import cover from '../photos/case-cover.jpg';
+import { useAuth } from '../game/auth';
 
 export function EntryScreen({ onEnter }: { onEnter: () => void }) {
-    const [email, setEmail] = useState('serag.detective@cairo-investigation.eg');
-    const [password, setPassword] = useState('••••••••••');
+    const { signIn, signUp } = useAuth();
+    const [mode, setMode] = useState<'login' | 'signup'>('login');
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirm, setConfirm] = useState('');
+    const [error, setError] = useState<string | null>(null);
+    const [notice, setNotice] = useState<string | null>(null);
+    const [busy, setBusy] = useState(false);
     const [leaving, setLeaving] = useState(false);
 
     const enter = () => {
         setLeaving(true);
         window.setTimeout(onEnter, 450); // مهلة انتقال الحركة
+    };
+
+    const submit = async () => {
+        if (busy) return;
+        setError(null);
+        setNotice(null);
+        const mail = email.trim();
+        if (!mail || !password) {
+            setError('اكتب البريد الإلكتروني وكلمة السر الأول.');
+            return;
+        }
+        if (mode === 'signup') {
+            if (!name.trim()) {
+                setError('اكتب اسم المحقق الأول.');
+                return;
+            }
+            if (password.length < 6) {
+                setError('كلمة السر لازم تكون ٦ أحرف على الأقل.');
+                return;
+            }
+            if (password !== confirm) {
+                setError('كلمتا السر مش متطابقتين. اكتبهم تاني.');
+                return;
+            }
+        }
+        setBusy(true);
+        try {
+            if (mode === 'login') {
+                const err = await signIn(mail, password);
+                if (err) {
+                    setError(err);
+                    return;
+                }
+                enter();
+            } else {
+                const res = await signUp(name.trim(), mail, password);
+                if (res === 'ok') {
+                    enter();
+                } else if (res === 'confirm-email') {
+                    setNotice('تم إنشاء حسابك. افتح بريدك الإلكتروني وأكّد الحساب من اللينك اللي اتبعتلك، وبعدين سجّل الدخول.');
+                    setMode('login');
+                    setPassword('');
+                    setConfirm('');
+                } else {
+                    setError(res);
+                }
+            }
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const switchMode = (m: 'login' | 'signup') => {
+        setMode(m);
+        setError(null);
+        setNotice(null);
     };
 
     return (
@@ -31,25 +96,60 @@ export function EntryScreen({ onEnter }: { onEnter: () => void }) {
                     <span className="stamp stamp-red entry-stamp">⚠ سري للغاية · مستوى أول</span>
                     <div className="entry-card-head">
                         <span className="chip chip-gold">محضر رسمي رقم ٨٨٤#</span>
-                        <h2>بوابة إثبات الهوية</h2>
+                        <h2>{mode === 'login' ? 'بوابة إثبات الهوية' : 'قيد محقق جديد'}</h2>
                     </div>
 
+                    {mode === 'signup' && (
+                        <label className="field">
+                            <span className="field-label">اسم المحقق 🕵️</span>
+                            <input type="text" value={name} onChange={(e) => setName(e.target.value)} aria-label="اسم المحقق" autoComplete="name" />
+                            <span className="field-hint">الاسم اللي هيظهر في سجل الأرشيف.</span>
+                        </label>
+                    )}
+
                     <label className="field">
-                        <span className="field-label">البريد الإلكتروني للضابط 📧</span>
-                        <input dir="ltr" type="email" value={email} onChange={(e) => setEmail(e.target.value)} aria-label="البريد الإلكتروني" />
-                        <span className="field-hint">نستخدم المعرف الرسمي المسجل بدفتر أحوال المديرية.</span>
+                        <span className="field-label">البريد الإلكتروني 📧</span>
+                        <input dir="ltr" type="email" value={email} onChange={(e) => setEmail(e.target.value)} aria-label="البريد الإلكتروني" autoComplete="email" />
                     </label>
 
                     <label className="field">
                         <span className="field-label">رمز الخزينة (كلمة السر) 🗝️</span>
-                        <input dir="ltr" type="password" value={password} onChange={(e) => setPassword(e.target.value)} aria-label="كلمة السر" />
-                        <span className="field-hint">خاضع لنظام الحماية من محاولات التسلل العشوائي.</span>
+                        <input dir="ltr" type="password" value={password} onChange={(e) => setPassword(e.target.value)} aria-label="كلمة السر" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
+                        {mode === 'signup' && <span className="field-hint">٦ أحرف على الأقل، وتتخزن مشفرة على النظام.</span>}
                     </label>
 
-                    <button type="button" className="btn-amber btn-block" onClick={enter}>
-                        🔒 تسجيل الدخول
+                    {mode === 'signup' && (
+                        <label className="field">
+                            <span className="field-label">تأكيد كلمة السر 🔁</span>
+                            <input dir="ltr" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} aria-label="تأكيد كلمة السر" autoComplete="new-password" />
+                        </label>
+                    )}
+
+                    {error && <p className="entry-error" role="alert">{error}</p>}
+                    {notice && <p className="entry-notice" role="status">{notice}</p>}
+
+                    <button type="button" className="btn-amber btn-block" onClick={() => void submit()} disabled={busy}>
+                        {busy ? '⏳ جاري التحقق...' : mode === 'login' ? '🔒 تسجيل الدخول' : '📝 إنشاء الحساب'}
                     </button>
-                    <p className="entry-note">نسخة تجريبية: الدخول شكلي، ومفيش أي بيانات بتتبعت أو بتتحفظ.</p>
+
+                    <p className="entry-switch">
+                        {mode === 'login' ? (
+                            <>
+                                لسه ماعملتش حساب؟{' '}
+                                <button type="button" className="entry-link" onClick={() => switchMode('signup')}>
+                                    أنشئ حساب جديد
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                عندك حساب بالفعل؟{' '}
+                                <button type="button" className="entry-link" onClick={() => switchMode('login')}>
+                                    سجّل الدخول
+                                </button>
+                            </>
+                        )}
+                    </p>
+                    <p className="entry-note">سجل تحقيقاتك بيتحفظ في حسابك على نظام الأرشيف — كل محقق بيشوف سجله بس.</p>
                 </section>
 
                 <p className="entry-footer anim-fade-up" style={{ animationDelay: '320ms' }}>

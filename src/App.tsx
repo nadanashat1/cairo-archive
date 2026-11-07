@@ -6,7 +6,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { getCase, CASE_HANEM_BRACELET, type CaseData } from './game/cases';
-import { useGameEngine, clearSavedRound, loadRecord } from './game/engine';
+import { useGameEngine, clearSavedRound } from './game/engine';
+import { AuthProvider, useAuth } from './game/auth';
 import { noirAudio } from './game/audio';
 import { TopStrip, GameHeader, GameFooter } from './components/chrome';
 import { EntryScreen } from './components/EntryScreen';
@@ -14,7 +15,7 @@ import { ArchiveScreen } from './components/ArchiveScreen';
 import { GameScreen } from './components/GameScreen';
 import { WinScreen, LossScreen } from './components/ResultScreens';
 
-type Screen = 'entry' | 'archive' | 'game' | 'records';
+type Screen = 'archive' | 'game' | 'records';
 
 function GameFlow({ caseData, onArchive }: { caseData: CaseData; onArchive: () => void }) {
     const engine = useGameEngine(caseData);
@@ -39,8 +40,9 @@ function GameFlow({ caseData, onArchive }: { caseData: CaseData; onArchive: () =
 }
 
 function RecordsScreen({ onArchive }: { onArchive: () => void }) {
-    // سجل الإدانات: بيقرأ نتيجة الفوز المحفوظة محليًا على الجهاز
-    const won = loadRecord(CASE_HANEM_BRACELET.id);
+    // سجل الإدانات: للاعب المسجل من حسابه على النظام، وللضيف من الجهاز
+    const { isWon } = useAuth();
+    const won = isWon(CASE_HANEM_BRACELET.id);
     return (
         <main className="records-screen screen-enter">
             <h1 className="display-title anim-fade-up">سجل الإدانات</h1>
@@ -59,15 +61,34 @@ function RecordsScreen({ onArchive }: { onArchive: () => void }) {
 }
 
 export function App() {
-    const [screen, setScreen] = useState<Screen>('entry');
+    return (
+        <AuthProvider>
+            <AppInner />
+        </AuthProvider>
+    );
+}
+
+function AppInner() {
+    const [screen, setScreen] = useState<Screen>('archive');
     const [activeCase, setActiveCase] = useState<CaseData | null>(null);
+    const { user, ready } = useAuth();
 
     // الموسيقى بتبدأ تلقائيًا مع فتح الموقع (ومع أول تفاعل لو المتصفح مانع)
     useEffect(() => { noirAudio.autoStart(); }, []);
 
     const goArchive = () => { setActiveCase(null); setScreen('archive'); };
 
-    if (screen === 'entry') {
+    // لسه بنحمّل حالة الجلسة المحفوظة
+    if (!ready) {
+        return (
+            <div className="noir-app" dir="rtl" lang="ar">
+                <div className="app-loading">⏳ جاري فتح سجلات الأرشيف...</div>
+            </div>
+        );
+    }
+
+    // مفيش حساب مسجل: بوابة إثبات الهوية هي أول شاشة
+    if (!user) {
         return (
             <div className="noir-app" dir="rtl" lang="ar">
                 <EntryScreen onEnter={() => setScreen('archive')} />

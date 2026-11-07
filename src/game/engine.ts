@@ -122,8 +122,20 @@ function reducer(s: RoundState, a: RoundAction): RoundState {
 const storageKey = (caseId: string) => `cairo-archive-round-${caseId}`;
 const recordKey = (caseId: string) => `cairo-archive-record-${caseId}`;
 
-// سجل الإدانة: نتيجة الفوز بتتخزن على الجهاز وتفضل حتى لو اللاعب بدأ من جديد
+// سجل الإدانة: نتيجة الفوز بتتخزن وتفضل حتى لو اللاعب بدأ من جديد.
+// الضيف: تخزين محلي على الجهاز. اللاعب المسجل: نظام الحسابات بيسجّل
+// حفظ السيرفر عن طريق setRecordSink، والتخزين المحلي بيتخطّى.
+type RecordSink = (caseId: string) => void;
+let recordSink: RecordSink | null = null;
+export function setRecordSink(sink: RecordSink | null) {
+    recordSink = sink;
+}
+
 function saveRecord(caseId: string) {
+    if (recordSink) {
+        recordSink(caseId);
+        return;
+    }
     try { localStorage.setItem(recordKey(caseId), JSON.stringify({ won: true })); } catch { /* التخزين المحلي مش متاح */ }
 }
 

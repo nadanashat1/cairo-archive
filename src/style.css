@@ -397,3 +397,56 @@ html, body, #root { margin: 0; min-height: 100%; }
 
 .accuse-bar .btn-accuse { min-width: min(340px, 100%); }
 
+
+/* ===== بوابة الحسابات ===== */
+.app-loading {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gold, #d4af37);
+    font-size: 1.2rem;
+}
+.entry-error {
+    margin: 10px 0 0;
+    padding: 10px 12px;
+    border: 1px solid #a33;
+    border-radius: 8px;
+    background: rgba(160, 40, 40, 0.15);
+    color: #ffb3b3;
+    font-size: 0.9rem;
+}
+.entry-notice {
+    margin: 10px 0 0;
+    padding: 10px 12px;
+    border: 1px solid #3a7d44;
+    border-radius: 8px;
+    background: rgba(50, 130, 70, 0.15);
+    color: #b8e6c1;
+    font-size: 0.9rem;
+}
+.entry-switch {
+    margin: 12px 0 0;
+    font-size: 0.9rem;
+    text-align: center;
+    opacity: 0.9;
+}
+.entry-link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--gold, #d4af37);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+.entry-link:hover { opacity: 0.85; }
+.entry-card button:disabled { opacity: 0.65; cursor: wait; }
+.header-player {
+    white-space: nowrap;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

@@ -7,6 +7,7 @@ import type { CaseData, Clue, Suspect } from '../game/cases';
 import { formatClock, DEFAULT_SETTINGS, type EngineApi } from '../game/engine';
 import { noirAudio } from '../game/audio';
 import { toArabicNumeral } from './ArchiveScreen';
+import { useAuth } from '../game/auth';
 
 import photoSulaiman from '../photos/suspect-sulaiman.jpg';
 import photoZanouba from '../photos/suspect-zanouba.jpg';
@@ -22,14 +23,17 @@ const PHOTOS: Record<string, string> = {
     kamel: photoKamel,
 };
 
-const notesKey = (caseId: string) => `cairo-archive-notes-${caseId}`;
+// ملاحظات كل لاعب متسجلة تحت حسابه: مفتاح التخزين بياخد هوية المحقق (أو ضيف)
+const notesKey = (caseId: string, scope: string) => `cairo-archive-notes-${caseId}-${scope}`;
 
 export function GameScreen({ caseData, engine, onExit }: { caseData: CaseData; engine: EngineApi; onExit: () => void }) {
     const { state, remainingMs, revealedCount, totalClues, visibleClues, nextClueInMs } = engine;
     const reading = state.status === 'reading';
     const [flashWrong, setFlashWrong] = useState(false);
     const [notesOpen, setNotesOpen] = useState(false);
-    const [notes, setNotes] = useState(() => { try { return localStorage.getItem(notesKey(caseData.id)) ?? ''; } catch { return ''; } });
+    const { user } = useAuth();
+    const notesScope = user?.id ?? 'guest';
+    const [notes, setNotes] = useState(() => { try { return localStorage.getItem(notesKey(caseData.id, notesScope)) ?? ''; } catch { return ''; } });
     const prevWrong = useRef(state.wrongAccusations);
     const prevRevealed = useRef(revealedCount);
 
@@ -185,7 +189,7 @@ export function GameScreen({ caseData, engine, onExit }: { caseData: CaseData; e
                         value={notes}
                         onChange={(e) => {
                             setNotes(e.target.value);
-                            try { localStorage.setItem(notesKey(caseData.id), e.target.value); } catch { /* ignore */ }
+                            try { localStorage.setItem(notesKey(caseData.id, notesScope), e.target.value); } catch { /* ignore */ }
                         }}
                         placeholder="سجّل ملاحظاتك عن الأدلة والمشتبه فيهم هنا…"
                         rows={5}

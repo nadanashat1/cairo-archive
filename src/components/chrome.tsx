@@ -4,6 +4,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { noirAudio } from '../game/audio';
+import { useAuth } from '../game/auth';
 
 export function TopStrip() {
     return (
@@ -100,6 +101,7 @@ export function AudioControl() {
 }
 
 export function GameHeader({ activeTab, onNavigate }: { activeTab: 'case' | 'archive' | 'records'; onNavigate: (tab: 'case' | 'archive' | 'records') => void }) {
+    const { displayName, signOut } = useAuth();
     return (
         <header className="game-header anim-fade-down">
             <div className="header-identity">
@@ -118,6 +120,10 @@ export function GameHeader({ activeTab, onNavigate }: { activeTab: 'case' | 'arc
                 <button type="button" className={`nav-tab ${activeTab === 'records' ? 'is-active' : ''}`} onClick={() => onNavigate('records')}>سجل الإدانات</button>
             </nav>
             <div className="header-side">
+                <span className="chip chip-gold header-player" title="المحقق الحالي">🕵️ {displayName}</span>
+                <button type="button" className="chip chip-button" onClick={() => void signOut()} title="تسجيل الخروج">
+                    🚪 خروج
+                </button>
                 <AudioControl />
             </div>
         </header>
