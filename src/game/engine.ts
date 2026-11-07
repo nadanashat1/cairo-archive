@@ -1,7 +1,8 @@
 // ============================================================================
 // منطق اللعب — ملف مستقل عن الواجهة.
 // التايمر مبني على الوقت الفعلي (Date.now) مش عدّاد لفات، عشان ميحصلش تسريع
-// أو بطء، ولما تخرجي من الصفحة وترجعي الوقت بيكمّل من مكانه الصح.
+// أو بطء. كل دخول للقضية أو تحديث للصفحة بيبدأ جولة جديدة من مرحلة القراءة —
+// مفيش استكمال لجولة قديمة، بس سجل الإدانة (الفوز) محفوظ على الجهاز.
 // ============================================================================
 
 import { useEffect, useMemo, useReducer, useRef } from 'react';
@@ -119,24 +120,22 @@ function reducer(s: RoundState, a: RoundAction): RoundState {
 }
 
 const storageKey = (caseId: string) => `cairo-archive-round-${caseId}`;
+const recordKey = (caseId: string) => `cairo-archive-record-${caseId}`;
 
-function saveRound(caseId: string, s: RoundState) {
-    try {
-        // نخزن اللقطة والوقت المنقضي لحد دلوقتي، فلما ترجع الصفحة يكمّل من هنا.
-        const snapshot: RoundState = { ...s, carriedElapsedMs: elapsedMsOf(s, Date.now()), startedAtMs: Date.now() };
-        localStorage.setItem(storageKey(caseId), JSON.stringify(snapshot));
-    } catch { /* التخزين المحلي مش متاح — الجولة تفضل في الذاكرة */ }
+// سجل الإدانة: نتيجة الفوز بتتخزن على الجهاز وتفضل حتى لو اللاعب بدأ من جديد
+function saveRecord(caseId: string) {
+    try { localStorage.setItem(recordKey(caseId), JSON.stringify({ won: true })); } catch { /* التخزين المحلي مش متاح */ }
 }
 
-function loadRound(caseId: string): RoundState | null {
+export function loadRecord(caseId: string): boolean {
     try {
-        const raw = localStorage.getItem(storageKey(caseId));
-        if (!raw) return null;
-        const parsed = JSON.parse(raw) as RoundState;
-        if (!parsed || typeof parsed.startedAtMs !== 'number') return null;
-        return { ...parsed, startedAtMs: Date.now() };
+        const rec = localStorage.getItem(recordKey(caseId));
+        if (rec) return !!JSON.parse(rec).won;
+        // توافق مع النسخة الأقدم: الفوز كان بيتخزن جوّه لقطة الجولة نفسها
+        const legacy = localStorage.getItem(storageKey(caseId));
+        return !!legacy && JSON.parse(legacy).status === 'won';
     } catch {
-        return null;
+        return false;
     }
 }
 
@@ -162,7 +161,9 @@ export interface EngineApi {
 }
 
 export function useGameEngine(caseData: CaseData, settings: GameSettings = DEFAULT_SETTINGS): EngineApi {
-    const [rawState, dispatch] = useReducer(reducer, undefined as unknown as RoundState, () => loadRound(caseData.id) ?? freshRound(false));
+    // كل دخول للقضية (أو تحديث للصفحة) بيبدأ جولة جديدة من مرحلة القراءة —
+    // مفيش استرجاع لجولة سابقة، حسب طلب اللاعبة.
+    const [rawState, dispatch] = useReducer(reducer, undefined as unknown as RoundState, () => freshRound(false));
     // بنحتاج roundMs جوّه reducer لحساب المتبقي عند الفوز
     const state = useMemo(() => Object.assign(rawState, { __roundMs: settings.roundSeconds * 1000 }), [rawState, settings.roundSeconds]);
     const [now, setNow] = useReducer((_: number, t: number) => t, Date.now());
@@ -184,15 +185,10 @@ export function useGameEngine(caseData: CaseData, settings: GameSettings = DEFAU
         if (state.status === 'playing' && remainingMs <= 0) dispatch({ type: 'timeout' });
     }, [remainingMs, state.status]);
 
-    // حفظ تلقائي مع كل تغيير + عند إغلاق الصفحة
+    // حفظ سجل الإدانة عند الفوز (مش الجولة نفسها — الجولة بتبدأ من الأول كل مرة)
     useEffect(() => {
-        saveRound(caseData.id, state);
-    }, [caseData.id, state]);
-    useEffect(() => {
-        const onUnload = () => saveRound(caseData.id, stateRef.current);
-        window.addEventListener('beforeunload', onUnload);
-        return () => window.removeEventListener('beforeunload', onUnload);
-    }, [caseData.id]);
+        if (state.status === 'won') saveRecord(caseData.id);
+    }, [caseData.id, state.status]);
 
     const allClues = useMemo(
         () => (state.withExtraClue ? [...caseData.clues, caseData.extraClue] : caseData.clues),

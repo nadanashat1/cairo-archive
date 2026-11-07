@@ -23,6 +23,15 @@ export function AudioControl() {
 
     useEffect(() => () => noirAudio.stopMusic(), []);
 
+    // مزامنة شكل الزر مع حالة الموسيقى الفعلية (الموسيقى ممكن تبدأ تلقائيًا)
+    useEffect(() => {
+        const id = window.setInterval(() => {
+            setPlaying(noirAudio.isPlaying);
+            setMuted(noirAudio.isMuted);
+        }, 400);
+        return () => window.clearInterval(id);
+    }, []);
+
     // لوحة الصوت بتتقفل لما اللاعب يدوس في أي حتة براها
     useEffect(() => {
         if (!open) return;
@@ -36,7 +45,7 @@ export function AudioControl() {
     // الزر الرئيسي: تشغيل/إيقاف بس — من غير ما يفتح لوحة مستوى الصوت
     const toggle = () => {
         if (playing) {
-            noirAudio.stopMusic();
+            noirAudio.userStop();
             setPlaying(false);
             setOpen(false);
         } else {

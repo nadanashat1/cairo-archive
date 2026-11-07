@@ -5,7 +5,9 @@
 // المصدر: https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100143
 // المقطوعة بتشتغل كاملة من غير قصّ وتتكرر (loop) طوال اللعب.
 // المؤثرات القصيرة (دليل/ختم/فوز/خسارة) مولّدة برمجيًا WebAudio.
-// لا يبدأ أي صوت إلا بعد تفاعل من المستخدم (زر الموسيقى في الهيدر).
+// الموسيقى بتبدأ تلقائيًا مع فتح الموقع؛ لو المتصفح منع التشغيل التلقائي
+// بتشتغل مع أول تفاعل عادي (أي ضغطة أو لمسة) من غير زرار مخصوص.
+// لو اللاعب وقّف الموسيقى بإيده، التشغيل التلقائي مبيستأنفهاش تاني.
 // ============================================================================
 
 import musicUrl from '../assets/mysterioso-march.mp3';
@@ -20,6 +22,7 @@ export class NoirAudio {
     private running = false;
     private muted = false;
     private volume = 0.5;
+    private userStopped = false; // اللاعب وقّف الموسيقى بإيده — التلقائي ميستأنفهاش
 
     private ensureCtx(): AudioContext | null {
         if (this.ctx) return this.ctx;
@@ -41,6 +44,7 @@ export class NoirAudio {
     async startMusic() {
         const ctx = this.ensureCtx();
         if (!ctx || this.running || this.loading) return;
+        this.userStopped = false;
         void ctx.resume();
         this.loading = true;
         try {
@@ -66,6 +70,29 @@ export class NoirAudio {
         } finally {
             this.loading = false;
         }
+    }
+
+    // إيقاف قرره اللاعب بنفسه: يمنع التشغيل التلقائي من الاستئناف
+    userStop() {
+        this.userStopped = true;
+        this.stopMusic();
+    }
+
+    // تشغيل تلقائي عند فتح الموقع: بنحاول فورًا، ولو المتصفح مانع الصوت
+    // قبل أول تفاعل (سياسة autoplay) بنكمّل التحميل ونشغّل فعليًا مع أول
+    // ضغطة/لمسة/زرار من اللاعب في أي حتة في الصفحة.
+    autoStart() {
+        if (this.running || this.loading || this.userStopped) return;
+        void this.startMusic();
+        const events: (keyof WindowEventMap)[] = ['pointerdown', 'keydown', 'touchstart'];
+        const cleanup = () => events.forEach((t) => window.removeEventListener(t, onFirst, true));
+        const onFirst = () => {
+            if (this.userStopped) { cleanup(); return; }
+            if (this.ctx && this.ctx.state === 'suspended') void this.ctx.resume();
+            if (!this.running && !this.loading) void this.startMusic();
+            if (this.running && this.ctx && this.ctx.state === 'running') cleanup();
+        };
+        events.forEach((t) => window.addEventListener(t, onFirst, true));
     }
 
     stopMusic() {

@@ -4,9 +4,10 @@
 // التنقل بين شاشة اللعب وشاشات النتيجة.
 // ============================================================================
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getCase, CASE_HANEM_BRACELET, type CaseData } from './game/cases';
-import { useGameEngine, clearSavedRound } from './game/engine';
+import { useGameEngine, clearSavedRound, loadRecord } from './game/engine';
+import { noirAudio } from './game/audio';
 import { TopStrip, GameHeader, GameFooter } from './components/chrome';
 import { EntryScreen } from './components/EntryScreen';
 import { ArchiveScreen } from './components/ArchiveScreen';
@@ -38,12 +39,8 @@ function GameFlow({ caseData, onArchive }: { caseData: CaseData; onArchive: () =
 }
 
 function RecordsScreen({ onArchive }: { onArchive: () => void }) {
-    // سجل الإدانات: بيقرأ آخر نتيجة محفوظة محليًا على الجهاز
-    let won = false;
-    try {
-        const raw = localStorage.getItem(`cairo-archive-round-${CASE_HANEM_BRACELET.id}`);
-        won = !!raw && JSON.parse(raw).status === 'won';
-    } catch { /* ignore */ }
+    // سجل الإدانات: بيقرأ نتيجة الفوز المحفوظة محليًا على الجهاز
+    const won = loadRecord(CASE_HANEM_BRACELET.id);
     return (
         <main className="records-screen screen-enter">
             <h1 className="display-title anim-fade-up">سجل الإدانات</h1>
@@ -64,6 +61,9 @@ function RecordsScreen({ onArchive }: { onArchive: () => void }) {
 export function App() {
     const [screen, setScreen] = useState<Screen>('entry');
     const [activeCase, setActiveCase] = useState<CaseData | null>(null);
+
+    // الموسيقى بتبدأ تلقائيًا مع فتح الموقع (ومع أول تفاعل لو المتصفح مانع)
+    useEffect(() => { noirAudio.autoStart(); }, []);
 
     const goArchive = () => { setActiveCase(null); setScreen('archive'); };
 

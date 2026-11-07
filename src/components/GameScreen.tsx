@@ -95,8 +95,8 @@ export function GameScreen({ caseData, engine, onExit }: { caseData: CaseData; e
             {reading && (
                 <section className="start-banner anim-pop" aria-label="بدء التحقيق">
                     <div className="start-banner-text">
-                        <h2>🗂️ اقري ملف القضية وكروت المشتبه فيهم براحتك</h2>
-                        <p>مفيش عد تنازلي دلوقتي. لما تكوني جاهزة، دوسي «ابدأ التحقيق» — ساعتها الوقت هيبدأ وأول دليل هيظهر فورًا.</p>
+                        <h2>🗂️ اقرأ ملف القضية وكروت المشتبه فيهم براحتك</h2>
+                        <p>مفيش عد تنازلي دلوقتي. لما تكون جاهز، دوس «ابدأ التحقيق» — ساعتها الوقت هيبدأ وأول دليل هيظهر فورًا.</p>
                     </div>
                     <button type="button" className="btn-amber btn-start" onClick={() => engine.start()}>
                         🕵️ ابدأ التحقيق
@@ -187,7 +187,7 @@ export function GameScreen({ caseData, engine, onExit }: { caseData: CaseData; e
                             setNotes(e.target.value);
                             try { localStorage.setItem(notesKey(caseData.id), e.target.value); } catch { /* ignore */ }
                         }}
-                        placeholder="سجّلي ملاحظاتك عن الأدلة والمشتبه فيهم هنا…"
+                        placeholder="سجّل ملاحظاتك عن الأدلة والمشتبه فيهم هنا…"
                         rows={5}
                     />
                 </section>
