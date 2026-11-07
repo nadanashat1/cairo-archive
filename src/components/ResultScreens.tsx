@@ -7,11 +7,12 @@ import type { CaseData } from '../game/cases';
 import { formatClock } from '../game/engine';
 import { toArabicNumeral } from './ArchiveScreen';
 
-export function WinScreen({ caseData, remainingMs, wrongAccusations, cluesUsed, onReplay, onArchive }: {
+export function WinScreen({ caseData, remainingMs, wrongAccusations, cluesUsed, totalClues, onReplay, onArchive }: {
     caseData: CaseData;
     remainingMs: number;
     wrongAccusations: number;
     cluesUsed: number;
+    totalClues: number;
     onReplay: () => void;
     onArchive: () => void;
 }) {
@@ -19,8 +20,11 @@ export function WinScreen({ caseData, remainingMs, wrongAccusations, cluesUsed, 
     const culpritLabel = caseData.culpritRoleLabel ?? 'الجاني الحقيقي';
     const winHeadline = caseData.winHeadline ?? 'مبروك يا محقق! كشفت الجاني قبل فوات الأوان ⚖️';
     const registerLine = caseData.winRegisterLine ?? 'النيابة العامة - قطاع الجنايات · سجل رقم ٥٢٤/١٩٥٢';
-    const stars = wrongAccusations === 0 ? 3 : wrongAccusations <= 2 ? 2 : 1;
-    const rating = stars === 3 ? 'محقق عبقري' : stars === 2 ? 'محقق شاطر' : 'محقق مثابر';
+    // التقييم بيكافئ الاعتماد على الربط: الحل قبل فتح آخر ظرف = أعلى تقييم.
+    // الاتهامات الغلط متسعّرة أصلًا في الوقت، فتأثيرها هنا ثانوي.
+    const openedAll = cluesUsed >= totalClues;
+    const stars = !openedAll ? 3 : wrongAccusations <= 1 ? 2 : 1;
+    const rating = stars === 3 ? 'محقق محصلش' : stars === 2 ? 'محقق شاطر' : 'محقق مثابر';
 
     return (
         <main className="result-screen screen-enter">
@@ -31,6 +35,9 @@ export function WinScreen({ caseData, remainingMs, wrongAccusations, cluesUsed, 
                     <small>{registerLine}</small>
                 </span>
                 <h1 className="display-title anim-fade-up">{winHeadline}</h1>
+                {stars === 3 && (
+                    <p className="win-flair anim-fade-up">🏆 حليتها من غير ما تفتح آخر ظرف — محقق محصلش بامتياز.</p>
+                )}
             </div>
 
             <section className="stats-row" aria-label="نتيجة الجولة">
@@ -47,7 +54,7 @@ export function WinScreen({ caseData, remainingMs, wrongAccusations, cluesUsed, 
                 <div className="stat-card anim-rise" style={{ animationDelay: '180ms' }}>
                     <span className="hud-label">الأدلة المستخدمة</span>
                     <b className="stat-value">{toArabicNumeral(cluesUsed)} أدلة</b>
-                    <span className="stat-note">خيوط مترابطة</span>
+                    <span className="stat-note">{openedAll ? 'فتحت كل الأظرف' : 'قفلتها قبل آخر ظرف 👏'}</span>
                 </div>
                 <div className="stat-card anim-rise" style={{ animationDelay: '240ms' }}>
                     <span className="hud-label">التقييم الجنائي</span>
