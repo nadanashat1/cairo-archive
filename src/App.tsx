@@ -71,7 +71,7 @@ export function App() {
 function AppInner() {
     const [screen, setScreen] = useState<Screen>('archive');
     const [activeCase, setActiveCase] = useState<CaseData | null>(null);
-    const { user, ready } = useAuth();
+    const { user, ready, recovery } = useAuth();
 
     // الموسيقى بتبدأ تلقائيًا مع فتح الموقع (ومع أول تفاعل لو المتصفح مانع)
     useEffect(() => { noirAudio.autoStart(); }, []);
@@ -87,8 +87,9 @@ function AppInner() {
         );
     }
 
-    // مفيش حساب مسجل: بوابة إثبات الهوية هي أول شاشة
-    if (!user) {
+    // مفيش حساب مسجل، أو المستخدم جاي من لينك استرجاع كلمة السر:
+    // بوابة إثبات الهوية هي أول شاشة (وفي حالة الاسترجاع بتعرض فورم كلمة سر جديدة)
+    if (!user || recovery) {
         return (
             <div className="noir-app" dir="rtl" lang="ar">
                 <EntryScreen onEnter={() => setScreen('archive')} />

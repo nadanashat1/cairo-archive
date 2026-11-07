@@ -25,6 +25,9 @@ export interface AuthApi {
     signIn: (email: string, password: string) => Promise<string | null>;
     signUp: (name: string, email: string, password: string) => Promise<'ok' | 'confirm-email' | string>;
     signOut: () => Promise<void>;
+    recovery: boolean;
+    requestPasswordReset: (email: string) => Promise<string | null>;
+    updatePassword: (password: string) => Promise<string | null>;
     isWon: (caseId: string) => boolean;
 }
 
@@ -43,6 +46,7 @@ function mapAuthError(message: string): string {
     if (m.includes('user already registered')) return 'في حساب مسجل بالبريد ده بالفعل. جرّب تسجيل الدخول.';
     if (m.includes('at least') && m.includes('password')) return 'كلمة السر لازم تكون ٦ أحرف على الأقل.';
     if (m.includes('email')) return 'صيغة البريد الإلكتروني مش صحيحة.';
+    if (m.includes('password')) return 'كلمة السر لازم تكون ٦ أحرف على الأقل.';
     return 'حصلت مشكلة في الاتصال بالنظام. حاول تاني بعد شوية.';
 }
 
@@ -50,6 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [profile, setProfile] = useState<PlayerProfile | null>(null);
     const [ready, setReady] = useState(false);
+    const [recovery, setRecovery] = useState(false);
     const profileRef = useRef<PlayerProfile | null>(null);
     profileRef.current = profile;
 
@@ -77,9 +82,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (u) await loadProfile(u);
             setReady(true);
         });
-        const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
             const u = session?.user ?? null;
             setUser(u);
+            if (event === 'PASSWORD_RECOVERY') setRecovery(true);
             if (u) void loadProfile(u);
             else setProfile(null);
         });
@@ -128,6 +134,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await supabase.auth.signOut();
         setUser(null);
         setProfile(null);
+        setRecovery(false);
+    }, []);
+
+    const requestPasswordReset = useCallback(async (email: string) => {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin,
+        });
+        return error ? mapAuthError(error.message) : null;
+    }, []);
+
+    const updatePassword = useCallback(async (password: string) => {
+        const { error } = await supabase.auth.updateUser({ password });
+        return error ? mapAuthError(error.message) : null;
     }, []);
 
     const isWon = useCallback(
@@ -146,6 +165,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signIn,
         signUp,
         signOut,
+        recovery,
+        requestPasswordReset,
+        updatePassword,
         isWon,
     };
 

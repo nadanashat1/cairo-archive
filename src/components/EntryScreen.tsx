@@ -8,7 +8,7 @@ import cover from '../photos/case-cover.jpg';
 import { useAuth } from '../game/auth';
 
 export function EntryScreen({ onEnter }: { onEnter: () => void }) {
-    const { signIn, signUp } = useAuth();
+    const { signIn, signUp, signOut, recovery, requestPasswordReset, updatePassword } = useAuth();
     const [mode, setMode] = useState<'login' | 'signup'>('login');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -18,6 +18,7 @@ export function EntryScreen({ onEnter }: { onEnter: () => void }) {
     const [notice, setNotice] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
     const [leaving, setLeaving] = useState(false);
+    const [resetMode, setResetMode] = useState(false);
 
     const enter = () => {
         setLeaving(true);
@@ -61,7 +62,7 @@ export function EntryScreen({ onEnter }: { onEnter: () => void }) {
                 if (res === 'ok') {
                     enter();
                 } else if (res === 'confirm-email') {
-                    setNotice('تم إنشاء حسابك. افتح بريدك الإلكتروني وأكّد الحساب من اللينك اللي اتبعتلك، وبعدين سجّل الدخول.');
+                    setNotice('تم إنشاء حسابك. افتح بريدك الإلكتروني وأكّد الحساب من اللينك اللي اتبعتلك، وبعدين سجّل الدخول. لو مش لاقي الرسالة، بص في الرسائل غير المرغوبة (سبام).');
                     setMode('login');
                     setPassword('');
                     setConfirm('');
@@ -74,11 +75,97 @@ export function EntryScreen({ onEnter }: { onEnter: () => void }) {
         }
     };
 
+    const requestReset = async () => {
+        if (busy) return;
+        setError(null);
+        setNotice(null);
+        const mail = email.trim();
+        if (!mail) {
+            setError('اكتب البريد الإلكتروني بتاع حسابك الأول.');
+            return;
+        }
+        setBusy(true);
+        try {
+            const err = await requestPasswordReset(mail);
+            if (err) {
+                setError(err);
+            } else {
+                setNotice('لو الحساب ده موجود، اتبعتلك لينك استرجاع على بريدك. افتح اللينك واختار كلمة سر جديدة. لو مش لاقي الرسالة، بص في الرسائل غير المرغوبة (سبام).');
+                setResetMode(false);
+            }
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const submitNewPassword = async () => {
+        if (busy) return;
+        setError(null);
+        setNotice(null);
+        if (password.length < 6) {
+            setError('كلمة السر لازم تكون ٦ أحرف على الأقل.');
+            return;
+        }
+        if (password !== confirm) {
+            setError('كلمتا السر مش متطابقتين. اكتبهم تاني.');
+            return;
+        }
+        setBusy(true);
+        try {
+            const err = await updatePassword(password);
+            if (err) {
+                setError(err);
+                return;
+            }
+            await signOut();
+            setPassword('');
+            setConfirm('');
+            setMode('login');
+            setNotice('تم تغيير كلمة السر. سجّل الدخول دلوقتي بكلمة السر الجديدة.');
+        } finally {
+            setBusy(false);
+        }
+    };
+
     const switchMode = (m: 'login' | 'signup') => {
         setMode(m);
         setError(null);
         setNotice(null);
     };
+
+    if (recovery) {
+        return (
+            <div className="entry-screen screen-enter">
+                <div className="entry-bg" style={{ backgroundImage: `url(${cover})` }} aria-hidden />
+                <div className="entry-content">
+                    <h1 className="game-logo anim-fade-down">
+                        <span className="game-logo-line">أرشيف القاهرة:</span>
+                        <span className="game-logo-gold">قضايا الليل</span>
+                    </h1>
+                    <section className="entry-card anim-scale" aria-label="استرجاع كلمة السر">
+                        <span className="stamp stamp-red entry-stamp">⚠ سري للغاية · مستوى أول</span>
+                        <div className="entry-card-head">
+                            <span className="chip chip-gold">محضر رسمي رقم ٨٨٤#</span>
+                            <h2>استرجاع رمز الخزينة</h2>
+                        </div>
+                        <label className="field">
+                            <span className="field-label">كلمة السر الجديدة 🗝️</span>
+                            <input dir="ltr" type="password" value={password} onChange={(e) => setPassword(e.target.value)} aria-label="كلمة السر الجديدة" autoComplete="new-password" />
+                            <span className="field-hint">٦ أحرف على الأقل، وتتخزن مشفرة على النظام.</span>
+                        </label>
+                        <label className="field">
+                            <span className="field-label">تأكيد كلمة السر 🔁</span>
+                            <input dir="ltr" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} aria-label="تأكيد كلمة السر" autoComplete="new-password" />
+                        </label>
+                        {error && <p className="entry-error" role="alert">{error}</p>}
+                        <button type="button" className="btn-gold" onClick={() => void submitNewPassword()} disabled={busy}>
+                            {busy ? '⏳ جاري الحفظ...' : '🗝️ حفظ كلمة السر الجديدة'}
+                        </button>
+                    </section>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={`entry-screen ${leaving ? 'screen-leave' : 'screen-enter'}`}>
@@ -117,6 +204,20 @@ export function EntryScreen({ onEnter }: { onEnter: () => void }) {
                         <input dir="ltr" type="password" value={password} onChange={(e) => setPassword(e.target.value)} aria-label="كلمة السر" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
                         {mode === 'signup' && <span className="field-hint">٦ أحرف على الأقل، وتتخزن مشفرة على النظام.</span>}
                     </label>
+
+                    {mode === 'login' && (
+                        <p className="entry-switch">
+                            نسيت كلمة السر؟{' '}
+                            <button type="button" className="entry-link" onClick={() => { setResetMode((v) => !v); setError(null); setNotice(null); }}>
+                                ابعتلي لينك استرجاع
+                            </button>
+                        </p>
+                    )}
+                    {mode === 'login' && resetMode && (
+                        <button type="button" className="btn-dark" onClick={() => void requestReset()} disabled={busy}>
+                            {busy ? '⏳ جاري الإرسال...' : '📧 ابعت لينك الاسترجاع على بريدي'}
+                        </button>
+                    )}
 
                     {mode === 'signup' && (
                         <label className="field">
