@@ -133,6 +133,7 @@ export function GameHeader({ activeTab, onNavigate }: { activeTab: 'case' | 'arc
 export function GameFooter() {
     return (
         <footer className="game-footer anim-fade-up">
+            <span className="creator-credit">صُنعت بواسطة <b className="gold-text">ندى نشأت</b> 🤍</span>
             <span>نظام الأرشيف: <b className="ok-dot">متصل</b></span>
             <span>دفتر أحوال الجنايات · القاهرة الخديوية ١٩٥٢ 📻</span>
             <span>حالة الاتصال: خط مشفر ومؤمن — جميع السجلات سرية ومحمية رسميًا</span>
