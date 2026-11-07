@@ -5,11 +5,12 @@
 // ============================================================================
 
 import React, { useEffect, useState } from 'react';
-import { getCase, CASE_HANEM_BRACELET, type CaseData } from './game/cases';
+import { getCase, CASE_HANEM_BRACELET, ARCHIVE_SLOTS, type CaseData } from './game/cases';
 import { useGameEngine, clearSavedRound } from './game/engine';
 import { AuthProvider, useAuth } from './game/auth';
 import { noirAudio } from './game/audio';
 import { TopStrip, GameHeader, GameFooter } from './components/chrome';
+import { toArabicNumeral } from './components/ArchiveScreen';
 import { EntryScreen } from './components/EntryScreen';
 import { ArchiveScreen } from './components/ArchiveScreen';
 import { GameScreen } from './components/GameScreen';
@@ -40,18 +41,28 @@ function GameFlow({ caseData, onArchive }: { caseData: CaseData; onArchive: () =
 }
 
 function RecordsScreen({ onArchive }: { onArchive: () => void }) {
-    // سجل الإدانات: للاعب المسجل من حسابه على النظام، وللضيف من الجهاز
+    // سجل الإدانات: للاعب المسجل من حسابه على النظام، وللضيف من الجهاز.
+    // كل قضية متاحة وليها سجلها الخاص المتعزول بمفتاح القضية.
     const { isWon } = useAuth();
-    const won = isWon(CASE_HANEM_BRACELET.id);
+    const wonCases = ARCHIVE_SLOTS.filter((slot) => slot.state === 'playable' && slot.caseId && isWon(slot.caseId)).map((slot) => ({
+        slot,
+        caseData: getCase(slot.caseId!),
+    }));
     return (
         <main className="records-screen screen-enter">
             <h1 className="display-title anim-fade-up">سجل الإدانات</h1>
-            {won ? (
-                <article className="record-card anim-rise">
-                    <span className="chip chip-gold">إدانة مؤكدة ✓</span>
-                    <h2>قضية ١: أسورة الهانم</h2>
-                    <p>اللص: كامل، ابن الهانم — اتقفلت بالأدلة الجنائية.</p>
-                </article>
+            {wonCases.length > 0 ? (
+                wonCases.map(({ slot, caseData }) => {
+                    const culprit = caseData.suspects.find((c) => c.id === caseData.culpritId)!;
+                    const label = caseData.recordLabel ?? 'اللص';
+                    return (
+                        <article className="record-card anim-rise" key={caseData.id}>
+                            <span className="chip chip-gold">إدانة مؤكدة ✓</span>
+                            <h2>قضية {toArabicNumeral(caseData.number)}: {caseData.title}</h2>
+                            <p>{label}: {culprit.name} — اتقفلت بالأدلة الجنائية.</p>
+                        </article>
+                    );
+                })
             ) : (
                 <p className="records-empty anim-fade-up">لسه مفيش إدانات مسجلة. اقفل أول قضية وهتلاقيها هنا.</p>
             )}
@@ -102,6 +113,7 @@ function AppInner() {
             <TopStrip />
             <GameHeader
                 activeTab={screen === 'game' ? 'case' : screen === 'records' ? 'records' : 'archive'}
+                caseTitle={activeCase?.title}
                 onNavigate={(tab) => {
                     if (tab === 'archive') goArchive();
                     else if (tab === 'records') setScreen('records');
@@ -122,3 +134,4 @@ function AppInner() {
 }
 
 export { clearSavedRound };
+
