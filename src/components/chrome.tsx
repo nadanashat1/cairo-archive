@@ -38,7 +38,7 @@ export function AudioControl() {
         <div className="audio-control">
             <button type="button" className={`chip chip-button ${playing ? 'is-on' : ''}`} onClick={toggle} aria-pressed={playing}>
                 <span className={`eq ${playing ? 'eq-on' : ''}`}><i /><i /><i /></span>
-                أصوات المطر / الجاز الهادئ
+                موسيقى التحقيق 🎵
             </button>
             {playing && open && (
                 <div className="audio-pop anim-pop" role="group" aria-label="تحكم الصوت">
@@ -100,6 +100,13 @@ export function GameFooter() {
             <span>نظام الأرشيف: <b className="ok-dot">متصل</b></span>
             <span>دفتر أحوال الجنايات · القاهرة الخديوية ١٩٥٢ 📻</span>
             <span>حالة الاتصال: خط مشفر ومؤمن — جميع السجلات سرية ومحمية رسميًا</span>
+            <span className="music-credit">
+                الموسيقى: Mysterioso March — Kevin MacLeod (incompetech.com) ·{' '}
+                <a className="source-link" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">
+                    Licensed under Creative Commons: By Attribution 4.0
+                </a>
+            </span>
         </footer>
     );
 }
+

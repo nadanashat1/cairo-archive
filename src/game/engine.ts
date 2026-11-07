@@ -20,7 +20,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
     wrongAccusePenaltySeconds: 20,
 };
 
-export type RoundStatus = 'playing' | 'won' | 'lost';
+export type RoundStatus = 'reading' | 'playing' | 'won' | 'lost';
 
 export interface RoundState {
     status: RoundStatus;
@@ -42,11 +42,14 @@ export type RoundAction =
     | { type: 'accuse'; suspectId: string; culpritId: string; penaltyMs: number }
     | { type: 'timeout' }
     | { type: 'restart'; withExtraClue: boolean }
-    | { type: 'restore'; state: RoundState };
+    | { type: 'restore'; state: RoundState }
+    | { type: 'start' };
 
 function freshRound(withExtraClue: boolean): RoundState {
     return {
-        status: 'playing',
+        // كل جولة بتبدأ بمرحلة قراءة هادية: القضية والمشتبه فيهم ظاهرين،
+        // والتايمر والأدلة ميشتغلوش غير لما اللاعب يدوس «ابدأ التحقيق».
+        status: 'reading',
         startedAtMs: Date.now(),
         carriedElapsedMs: 0,
         penaltyMs: 0,
@@ -71,6 +74,7 @@ export function remainingMsOf(s: RoundState, settings: GameSettings, now: number
 
 // عدد الأدلة الظاهرة: أول دليل فوري، وكل دليل وراه بعد فاصل ثابت.
 export function revealedCountOf(s: RoundState, settings: GameSettings, totalClues: number, now: number): number {
+    if (s.status === 'reading') return 0; // مفيش أدلة قبل بدء التحقيق
     const elapsed = elapsedMsOf(s, now) / 1000;
     const byTime = 1 + Math.floor(elapsed / settings.clueIntervalSeconds);
     return Math.max(1, Math.min(totalClues, byTime));
@@ -78,6 +82,10 @@ export function revealedCountOf(s: RoundState, settings: GameSettings, totalClue
 
 function reducer(s: RoundState, a: RoundAction): RoundState {
     switch (a.type) {
+        case 'start':
+            // بدء التحقيق: التايمر يبدأ من اللحظة دي بالوقت الفعلي، وأول دليل يظهر فورًا.
+            if (s.status !== 'reading') return s;
+            return { ...s, status: 'playing', startedAtMs: Date.now() };
         case 'exclude':
             if (s.status !== 'playing' || s.excluded.includes(a.suspectId)) return s;
             return { ...s, excluded: [...s.excluded, a.suspectId], selected: s.selected === a.suspectId ? null : s.selected };
@@ -142,6 +150,7 @@ export interface EngineApi {
     remainingMs: number;
     elapsedMs: number;
     revealedCount: number;
+    totalClues: number;
     visibleClues: CaseData['clues'];
     nextClueInMs: number | null;
     exclude: (id: string) => void;
@@ -149,6 +158,7 @@ export interface EngineApi {
     select: (id: string | null) => void;
     accuse: (id: string) => void;
     restart: (withExtraClue: boolean) => void;
+    start: () => void;
 }
 
 export function useGameEngine(caseData: CaseData, settings: GameSettings = DEFAULT_SETTINGS): EngineApi {
@@ -201,6 +211,7 @@ export function useGameEngine(caseData: CaseData, settings: GameSettings = DEFAU
         remainingMs,
         elapsedMs: elapsedMsOf(state, now),
         revealedCount,
+        totalClues: allClues.length,
         visibleClues: allClues.slice(0, revealedCount),
         nextClueInMs,
         exclude: (id) => dispatch({ type: 'exclude', suspectId: id }),
@@ -208,6 +219,7 @@ export function useGameEngine(caseData: CaseData, settings: GameSettings = DEFAU
         select: (id) => dispatch({ type: 'select', suspectId: id }),
         accuse: (id) => dispatch({ type: 'accuse', suspectId: id, culpritId: caseData.culpritId, penaltyMs: settings.wrongAccusePenaltySeconds * 1000 }),
         restart: (withExtra) => { clearSavedRound(caseData.id); dispatch({ type: 'restart', withExtraClue: withExtra }); },
+        start: () => dispatch({ type: 'start' }),
     };
 }
 
@@ -218,3 +230,4 @@ export function formatClock(ms: number): string {
     const s = total % 60;
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
+

@@ -1,14 +1,22 @@
 // ============================================================================
-// الصوت — موسيقى أجواء نوار مولّدة برمجيًا (WebAudio)، من غير أي ملفات خارجية
-// أو مقطوعات محمية بحقوق نشر. لا يبدأ أي صوت إلا بعد تفاعل من المستخدم.
+// الصوت — موسيقى اللعبة: مقطوعة «Mysterioso March» لـ Kevin MacLeod
+// (incompetech.com)، مرخّصة تحت Creative Commons: By Attribution 4.0
+// https://creativecommons.org/licenses/by/4.0/
+// المصدر: https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100143
+// المقطوعة بتشتغل كاملة من غير قصّ وتتكرر (loop) طوال اللعب.
+// المؤثرات القصيرة (دليل/ختم/فوز/خسارة) مولّدة برمجيًا WebAudio.
+// لا يبدأ أي صوت إلا بعد تفاعل من المستخدم (زر الموسيقى في الهيدر).
 // ============================================================================
+
+import musicUrl from '../assets/mysterioso-march.mp3';
 
 export class NoirAudio {
     private ctx: AudioContext | null = null;
     private master: GainNode | null = null;
-    private padGain: GainNode | null = null;
-    private rainGain: GainNode | null = null;
-    private padTimer: number | null = null;
+    private musicGain: GainNode | null = null;
+    private musicSrc: AudioBufferSourceNode | null = null;
+    private musicBytes: ArrayBuffer | null = null;
+    private loading = false;
     private running = false;
     private muted = false;
     private volume = 0.5;
@@ -28,83 +36,43 @@ export class NoirAudio {
         return this.ctx;
     }
 
-    // نغمات هادئة: تتابع مقامي بطيء (Dm - Bb - Gm - A) بنبرات ناعمة
-    private schedulePadChord(freqs: number[], when: number, dur: number) {
-        const ctx = this.ctx!;
-        freqs.forEach((f, i) => {
-            const osc = ctx.createOscillator();
-            osc.type = i === 0 ? 'sine' : 'triangle';
-            osc.frequency.value = f;
-            const g = ctx.createGain();
-            g.gain.setValueAtTime(0, when);
-            g.gain.linearRampToValueAtTime(i === 0 ? 0.05 : 0.028, when + dur * 0.3);
-            g.gain.linearRampToValueAtTime(0, when + dur);
-            osc.connect(g).connect(this.padGain!);
-            osc.start(when);
-            osc.stop(when + dur + 0.1);
-        });
-    }
-
-    // صوت مطر خفيف: ضوضاء بنية مفلترة
-    private startRain() {
-        const ctx = this.ctx!;
-        const len = ctx.sampleRate * 2;
-        const buffer = ctx.createBuffer(1, len, ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        let last = 0;
-        for (let i = 0; i < len; i++) {
-            const white = Math.random() * 2 - 1;
-            last = (last + 0.02 * white) / 1.02;
-            data[i] = last * 3.5;
-        }
-        const src = ctx.createBufferSource();
-        src.buffer = buffer;
-        src.loop = true;
-        const lp = ctx.createBiquadFilter();
-        lp.type = 'lowpass';
-        lp.frequency.value = 1400;
-        const hp = ctx.createBiquadFilter();
-        hp.type = 'highpass';
-        hp.frequency.value = 400;
-        src.connect(lp).connect(hp).connect(this.rainGain!);
-        src.start();
-    }
-
-    startMusic() {
+    // الموسيقى بتتجاب مرة واحدة وتتفك وتشتغل في حلقة مفرغة على نفس قناة
+    // التحكم في الصوت/الكتم زي ما هي.
+    async startMusic() {
         const ctx = this.ensureCtx();
-        if (!ctx || this.running) return;
+        if (!ctx || this.running || this.loading) return;
         void ctx.resume();
-        this.padGain = ctx.createGain();
-        this.padGain.gain.value = 1;
-        this.padGain.connect(this.master!);
-        this.rainGain = ctx.createGain();
-        this.rainGain.gain.value = 0.06;
-        this.rainGain.connect(this.master!);
-        this.startRain();
-        // تتابع هارموني هادي، كل مقطع ٧ ثواني
-        const chords: number[][] = [
-            [146.83, 220.0, 293.66],  // Dm
-            [116.54, 174.61, 233.08], // Bb
-            [98.0, 196.0, 293.66],    // Gm
-            [110.0, 220.0, 277.18],   // A
-        ];
-        let step = 0;
-        const play = () => {
-            const now = ctx.currentTime + 0.05;
-            this.schedulePadChord(chords[step % chords.length], now, 7.5);
-            step++;
-        };
-        play();
-        this.padTimer = window.setInterval(play, 7000);
-        this.running = true;
+        this.loading = true;
+        try {
+            if (!this.musicBytes) {
+                const res = await fetch(musicUrl);
+                if (!res.ok) throw new Error('music fetch failed');
+                this.musicBytes = await res.arrayBuffer();
+            }
+            // decodeAudioData بيفرّغ الـ buffer، فبنفك من نسخة عشان نقدر نعيد التشغيل
+            const buffer = await ctx.decodeAudioData(this.musicBytes.slice(0));
+            this.musicGain = ctx.createGain();
+            this.musicGain.gain.value = 0.7;
+            this.musicGain.connect(this.master!);
+            const src = ctx.createBufferSource();
+            src.buffer = buffer;
+            src.loop = true;
+            src.connect(this.musicGain);
+            src.start();
+            this.musicSrc = src;
+            this.running = true;
+        } catch {
+            // لو التحميل أو فك الترميز فشل، اللعبة تفضل شغالة من غير موسيقى
+        } finally {
+            this.loading = false;
+        }
     }
 
     stopMusic() {
-        if (this.padTimer !== null) { window.clearInterval(this.padTimer); this.padTimer = null; }
+        if (this.musicSrc) { try { this.musicSrc.stop(); } catch { /* متوقف أصلًا */ } this.musicSrc = null; }
+        this.musicGain = null;
         if (this.ctx) { void this.ctx.close(); this.ctx = null; }
         this.master = null;
-        this.padGain = null;
-        this.rainGain = null;
         this.running = false;
     }
 
