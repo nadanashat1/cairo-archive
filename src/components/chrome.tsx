@@ -100,7 +100,7 @@ export function AudioControl() {
     );
 }
 
-export function GameHeader({ activeTab, onNavigate }: { activeTab: 'case' | 'archive' | 'records'; onNavigate: (tab: 'case' | 'archive' | 'records') => void }) {
+export function GameHeader({ activeTab, caseTitle, onNavigate }: { activeTab: 'case' | 'archive' | 'records'; caseTitle?: string; onNavigate: (tab: 'case' | 'archive' | 'records') => void }) {
     const { displayName, signOut } = useAuth();
     return (
         <header className="game-header anim-fade-down">
@@ -111,7 +111,7 @@ export function GameHeader({ activeTab, onNavigate }: { activeTab: 'case' | 'arc
                         <span className="header-title">أرشيف القاهرة: قضايا الليل</span>
                         <span className="chip chip-secret">ملف سري ٤٢٤#</span>
                     </div>
-                    <div className="header-sub">المحقق: {displayName} · القضية: أسورة الهانم</div>
+                    <div className="header-sub">المحقق: {displayName} · القضية: {caseTitle ?? 'أسورة الهانم'}</div>
                 </div>
             </div>
             <nav className="header-nav" aria-label="التنقل الرئيسي">
@@ -146,4 +146,5 @@ export function GameFooter() {
         </footer>
     );
 }
+
 
