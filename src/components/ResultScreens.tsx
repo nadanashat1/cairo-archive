@@ -20,10 +20,16 @@ export function WinScreen({ caseData, remainingMs, wrongAccusations, cluesUsed, 
     const culpritLabel = caseData.culpritRoleLabel ?? 'الجاني الحقيقي';
     const winHeadline = caseData.winHeadline ?? 'مبروك يا محقق! كشفت الجاني قبل فوات الأوان ⚖️';
     const registerLine = caseData.winRegisterLine ?? 'النيابة العامة - قطاع الجنايات · سجل رقم ٥٢٤/١٩٥٢';
-    // التقييم بيكافئ الاعتماد على الربط: الحل قبل فتح آخر ظرف = أعلى تقييم.
-    // الاتهامات الغلط متسعّرة أصلًا في الوقت، فتأثيرها هنا ثانوي.
+    // التقييم له طبقتين: اللقب (نجوم) + درجة استدلال من ١٠٠.
+    // اللقب بيحقق قاعدة اللاعبة: الحل قبل فتح آخر ظرف (الدليل المبسّط) = محقق محصلش.
+    // الدرجة بتتدرج مع كل ظرف إضافي (نسبة من عدد أظرف القضية) ومع الاتهامات الغلط.
     const openedAll = cluesUsed >= totalClues;
-    const stars = !openedAll ? 3 : wrongAccusations <= 1 ? 2 : 1;
+    const totalEnvelopes = Math.max(1, totalClues - 1);
+    const envelopesOpened = Math.max(0, cluesUsed - 1);
+    const cluePenalty = Math.round((40 * envelopesOpened) / totalEnvelopes); // حتى ٤٠ درجة، نسبة لعدد أظرف القضية
+    const wrongPenalty = Math.min(20, 10 * wrongAccusations); // حتى ٢٠ درجة
+    const deductionScore = Math.max(5, 100 - cluePenalty - wrongPenalty);
+    const stars = !openedAll ? 3 : deductionScore >= 50 ? 2 : 1;
     const rating = stars === 3 ? 'محقق محصلش' : stars === 2 ? 'محقق شاطر' : 'محقق مثابر';
 
     return (
@@ -60,6 +66,11 @@ export function WinScreen({ caseData, remainingMs, wrongAccusations, cluesUsed, 
                     <span className="hud-label">التقييم الجنائي</span>
                     <b className="stat-value stars">{'★'.repeat(stars)}{'☆'.repeat(3 - stars)}</b>
                     <span className="stat-note">{rating}</span>
+                </div>
+                <div className="stat-card anim-rise" style={{ animationDelay: '300ms' }}>
+                    <span className="hud-label">درجة الاستدلال</span>
+                    <b className="stat-value">{toArabicNumeral(deductionScore)} من ١٠٠</b>
+                    <span className="stat-note">أقل أظرف وأخطاء = درجة أعلى</span>
                 </div>
             </section>
 
