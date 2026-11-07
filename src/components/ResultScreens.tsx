@@ -16,6 +16,9 @@ export function WinScreen({ caseData, remainingMs, wrongAccusations, cluesUsed, 
     onArchive: () => void;
 }) {
     const culprit = caseData.suspects.find((s) => s.id === caseData.culpritId)!;
+    const culpritLabel = caseData.culpritRoleLabel ?? 'اللص الحقيقي';
+    const winHeadline = caseData.winHeadline ?? 'مبروك يا محقق! كشفت اللص قبل فوات الأوان ⚖️';
+    const registerLine = caseData.winRegisterLine ?? 'النيابة العامة - قطاع الجنايات · سجل رقم ٥٢٤/١٩٥٢';
     const stars = wrongAccusations === 0 ? 3 : wrongAccusations <= 2 ? 2 : 1;
     const rating = stars === 3 ? 'محقق عبقري' : stars === 2 ? 'محقق شاطر' : 'محقق مثابر';
 
@@ -25,9 +28,9 @@ export function WinScreen({ caseData, remainingMs, wrongAccusations, cluesUsed, 
                 <span className="chip chip-gold anim-pop">🏅 إسدال الستار رسميًا</span>
                 <span className="stamp stamp-red stamp-anim result-stamp">
                     تم إغلاق القضية والإدانة المؤكدة<br />
-                    <small>النيابة العامة - قطاع الجنايات · سجل رقم ٥٢٤/١٩٥٢</small>
+                    <small>{registerLine}</small>
                 </span>
-                <h1 className="display-title anim-fade-up">مبروك يا محقق! كشفت اللص قبل فوات الأوان ⚖️</h1>
+                <h1 className="display-title anim-fade-up">{winHeadline}</h1>
             </div>
 
             <section className="stats-row" aria-label="نتيجة الجولة">
@@ -55,7 +58,7 @@ export function WinScreen({ caseData, remainingMs, wrongAccusations, cluesUsed, 
 
             <section className="culprit-panel anim-fade-up" style={{ animationDelay: '200ms' }} aria-label="ملف اللص">
                 <span className="chip chip-gold">ملف المتهم</span>
-                <h2>كامل، ابن الهانم — اللص الحقيقي</h2>
+                <h2>{culprit.name} — {culpritLabel}</h2>
                 <p>{caseData.winText}</p>
                 <p className="culprit-summary">{caseData.culpritSummary}</p>
             </section>
@@ -101,3 +104,4 @@ export function LossScreen({ caseData, onRetry, onArchive }: {
         </main>
     );
 }
+
