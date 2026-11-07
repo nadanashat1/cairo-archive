@@ -5,13 +5,13 @@
 import React from 'react';
 import { ARCHIVE_SLOTS } from '../game/cases';
 import cover from '../photos/case-cover.jpg';
-import caseTea from '../photos/case-2-tea.png';
-import caseOffice from '../photos/case-3-office.png';
-import caseTrain from '../photos/case-4-train.png';
-import caseCasino from '../photos/case-5-casino.png';
-import casePainting from '../photos/case-6-painting.png';
-import caseOpera from '../photos/case-7-opera.png';
-import caseHotel from '../photos/case-8-hotel.png';
+import caseTea from '../photos/1-case-2-tea.png';
+import caseOffice from '../photos/2-case-3-office.png';
+import caseTrain from '../photos/3-case-4-train.png';
+import caseCasino from '../photos/4-case-5-casino.png';
+import casePainting from '../photos/5-case-6-painting.png';
+import caseOpera from '../photos/6-case-7-opera.png';
+import caseHotel from '../photos/7-case-8-hotel.png';
 
 const LOCKED_ART: Record<number, { src: string; alt: string }> = {
     2: { src: caseTea, alt: 'فنجان شاي جنب زجاجة سم على صينية نحاس — جو قضية سم في فنجان الشاي' },
