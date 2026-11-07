@@ -1,0 +1,384 @@
+/* ==========================================================================
+   أرشيف القاهرة: قضايا الليل — ثيم النوار الداكن + نظام الحركة
+   ========================================================================== */
+
+html, body, #root { margin: 0; min-height: 100%; }
+
+:root {
+    --nvr-bg: #080e1b;
+    --nvr-card: #141c2e;
+    --nvr-card-2: #0f1729;
+    --nvr-border: #242a38;
+    --nvr-gold: #ffc174;
+    --nvr-gold-2: #d19b57;
+    --nvr-amber: #f0a02e;
+    --nvr-amber-2: #d97e12;
+    --nvr-red: #d64550;
+    --nvr-stamp: #a82e2e;
+    --nvr-text: #f3ede2;
+    --nvr-muted: #9aa3b2;
+    --nvr-ok: #7fc98f;
+}
+
+.noir-app {
+    background:
+        radial-gradient(1200px 500px at 85% -10%, rgba(240, 160, 46, 0.07), transparent 60%),
+        radial-gradient(900px 480px at 10% 110%, rgba(90, 120, 200, 0.06), transparent 60%),
+        var(--nvr-bg);
+    color: var(--nvr-text);
+    min-height: 100vh;
+    margin: -24px 0;
+    position: relative;
+    left: -24px;
+    width: calc(100% + 48px);
+    padding: 24px;
+    direction: rtl;
+    text-align: right;
+    font-family: 'Cairo', 'Geeza Pro', 'Segoe UI', Tahoma, 'Noto Sans Arabic', 'Noto Naskh Arabic', Arial, sans-serif;
+}
+@media (min-width: 768px) { .noir-app { margin: -36px 0; left: -36px; width: calc(100% + 72px); padding: 32px; } }
+
+.noir-app, .noir-app * { box-sizing: border-box; }
+
+.display-title, .game-logo, .timer-digits, .stat-value, .suspect-name {
+    font-family: 'Rakkas', 'Aref Ruqaa', 'Cairo', 'Geeza Pro', serif;
+}
+
+.display-title {
+    color: var(--nvr-gold);
+    font-size: clamp(26px, 4.5vw, 44px);
+    margin: 8px 0 12px;
+    line-height: 1.35;
+    letter-spacing: 0.2px;
+}
+
+.gold-text { color: var(--nvr-gold); }
+.ok-dot { color: var(--nvr-ok); }
+
+/* ---------- الشرائط والهيدر ---------- */
+.top-strip {
+    display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    font-size: 12px; color: var(--nvr-muted);
+    border-bottom: 1px solid var(--nvr-border);
+    padding-bottom: 10px; margin-bottom: 14px;
+}
+.top-strip-warning { color: var(--nvr-red); }
+
+.game-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap; margin-bottom: 20px;
+}
+.header-identity { display: flex; align-items: center; gap: 12px; }
+.header-badge {
+    width: 46px; height: 46px; display: grid; place-items: center;
+    background: var(--nvr-card); border: 1px solid var(--nvr-gold-2);
+    border-radius: 50%; font-size: 22px;
+}
+.header-title { color: var(--nvr-gold); font-weight: 700; font-size: 18px; }
+.header-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.header-sub { color: var(--nvr-muted); font-size: 12px; margin-top: 2px; }
+.header-nav { display: flex; gap: 6px; flex-wrap: wrap; }
+.nav-tab {
+    background: transparent; color: var(--nvr-muted); border: 0;
+    padding: 10px 16px; border-radius: 8px; cursor: pointer; font: inherit;
+    min-height: 44px; transition: color .25s, background .25s, transform .15s;
+}
+.nav-tab:hover { color: var(--nvr-text); transform: translateY(-1px); }
+.nav-tab.is-active { background: var(--nvr-card); color: var(--nvr-gold); box-shadow: inset 0 0 0 1px var(--nvr-border); }
+
+/* ---------- رقائق وأزرار ---------- */
+.chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; padding: 5px 12px; border-radius: 999px;
+    border: 1px solid var(--nvr-border); color: var(--nvr-muted);
+    background: var(--nvr-card-2);
+}
+.chip-gold { color: #2a1c05; background: linear-gradient(135deg, var(--nvr-gold), var(--nvr-gold-2)); border-color: transparent; font-weight: 700; }
+.chip-secret { color: #fff; background: var(--nvr-stamp); border-color: transparent; }
+.chip-dark { background: var(--nvr-card-2); }
+.chip-button { cursor: pointer; font: inherit; min-height: 36px; transition: transform .15s, box-shadow .2s, border-color .2s; }
+.chip-button:hover { transform: translateY(-1px); border-color: var(--nvr-gold-2); }
+.chip-button.is-on { border-color: var(--nvr-gold-2); color: var(--nvr-gold); }
+.chip-pulse { animation: pulse 1.6s ease-in-out infinite; }
+
+.btn-amber {
+    background: linear-gradient(135deg, var(--nvr-amber), var(--nvr-amber-2));
+    color: #241703; font-weight: 800; font-size: 16px;
+    border: 0; border-radius: 10px; padding: 14px 22px; cursor: pointer;
+    min-height: 48px; font-family: inherit;
+    box-shadow: 0 6px 18px rgba(217, 126, 18, 0.28);
+    transition: transform .16s, box-shadow .25s, filter .2s;
+}
+.btn-amber:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.06); box-shadow: 0 10px 24px rgba(217, 126, 18, 0.38); }
+.btn-amber:active:not(:disabled) { transform: translateY(0) scale(.98); }
+.btn-amber:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+.btn-block { width: 100%; }
+.btn-dark {
+    background: var(--nvr-card-2); color: var(--nvr-text);
+    border: 1px solid var(--nvr-border); border-radius: 10px;
+    padding: 11px 16px; cursor: pointer; font: inherit; font-size: 14px;
+    min-height: 44px; transition: border-color .2s, transform .15s, background .2s;
+}
+.btn-dark:hover { border-color: var(--nvr-gold-2); transform: translateY(-1px); }
+.btn-dark.is-armed { border-color: var(--nvr-amber); color: var(--nvr-gold); }
+
+/* ---------- شاشة الدخول ---------- */
+.entry-screen { position: relative; min-height: calc(100vh - 48px); display: grid; place-items: center; overflow: hidden; border-radius: 16px; }
+.entry-bg {
+    position: absolute; inset: 0; background-size: cover; background-position: center;
+    filter: brightness(.32) saturate(.9);
+    animation: slow-zoom 24s ease-in-out infinite alternate;
+}
+.entry-content { position: relative; z-index: 1; width: min(520px, 100%); padding: 24px 8px; text-align: center; }
+.game-logo { margin: 0 0 8px; font-size: clamp(34px, 7vw, 56px); line-height: 1.25; }
+.game-logo-line { display: block; color: var(--nvr-text); font-size: .55em; }
+.game-logo-gold { color: var(--nvr-gold); text-shadow: 0 2px 24px rgba(255, 193, 116, .25); }
+.entry-tagline { color: var(--nvr-muted); font-size: 14px; margin: 0 0 22px; }
+.entry-card {
+    position: relative; background: rgba(16, 23, 41, .92); backdrop-filter: blur(6px);
+    border: 1px solid var(--nvr-border); border-radius: 16px; padding: 28px 24px;
+    text-align: right; box-shadow: 0 24px 60px rgba(0, 0, 0, .5);
+}
+.entry-card-head h2 { margin: 10px 0 18px; color: var(--nvr-gold); }
+.entry-stamp { position: absolute; top: -14px; inset-inline-start: 10px; }
+.field { display: block; margin-bottom: 16px; }
+.field-label { display: block; font-size: 13px; color: var(--nvr-gold-2); margin-bottom: 6px; }
+.field input {
+    width: 100%; background: var(--nvr-bg); color: var(--nvr-text);
+    border: 1px solid var(--nvr-border); border-radius: 10px; padding: 12px 14px;
+    font: inherit; min-height: 46px; transition: border-color .2s, box-shadow .2s;
+}
+.field input:focus { outline: none; border-color: var(--nvr-gold-2); box-shadow: 0 0 0 3px rgba(255, 193, 116, .15); }
+.field-hint { display: block; font-size: 11px; color: var(--nvr-muted); margin-top: 5px; }
+.entry-note { font-size: 11px; color: var(--nvr-muted); margin: 12px 0 0; text-align: center; }
+.entry-footer { margin-top: 18px; font-size: 12px; color: var(--nvr-muted); }
+
+/* ---------- الطوابع ---------- */
+.stamp {
+    display: inline-block; padding: 6px 14px; border-radius: 6px;
+    font-weight: 800; font-size: 13px; transform: rotate(-6deg);
+    letter-spacing: .5px; line-height: 1.5; text-align: center;
+}
+.stamp-red {
+    color: #ffb9be; background: rgba(168, 46, 46, .92);
+    border: 2px dashed rgba(255, 185, 190, .6);
+}
+.stamp-anim { animation: stamp-in .5s cubic-bezier(.2, 2.2, .4, .9) both; }
+
+/* ---------- الأرشيف ---------- */
+.archive-screen, .records-screen, .result-screen, .game-screen { max-width: 1280px; margin: 0 auto; }
+.archive-head { text-align: center; margin-bottom: 24px; }
+.archive-sub { color: var(--nvr-muted); margin: 0; }
+.case-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
+.case-card {
+    background: var(--nvr-card); border: 1px solid var(--nvr-border);
+    border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px;
+    transition: transform .25s, border-color .25s, box-shadow .25s;
+}
+.case-card.is-playable:hover { transform: translateY(-4px); border-color: var(--nvr-gold-2); box-shadow: 0 14px 34px rgba(0, 0, 0, .45); }
+.case-card.is-playable { border-color: var(--nvr-gold-2); }
+.case-card.is-locked { opacity: .55; }
+.case-card-media { position: relative; border-radius: 10px; overflow: hidden; aspect-ratio: 16/9; background: var(--nvr-card-2); }
+.case-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.case-card-media .chip { position: absolute; top: 10px; inset-inline-start: 10px; }
+.case-card-locked-art { display: grid; place-items: center; height: 100%; font-size: 44px; }
+.case-card-title { margin: 0; font-size: 17px; color: var(--nvr-text); }
+.case-card-note { margin: 0; font-size: 12px; color: var(--nvr-muted); }
+
+/* ---------- شاشة اللعب ---------- */
+.case-head { margin-bottom: 18px; }
+.case-head-meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--nvr-muted); }
+.case-intro { color: var(--nvr-text); opacity: .85; font-size: 14px; line-height: 1.9; margin: 6px 0; max-width: 900px; }
+
+.hud { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+@media (max-width: 720px) { .hud { grid-template-columns: 1fr; } }
+.hud-card { background: var(--nvr-card); border: 1px solid var(--nvr-border); border-radius: 12px; padding: 14px 18px; display: flex; flex-direction: column; gap: 8px; justify-content: center; }
+.hud-label { font-size: 12px; color: var(--nvr-muted); }
+.hud-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.hud-warn { font-size: 11px; color: var(--nvr-red); }
+.timer-card { align-items: center; text-align: center; transition: border-color .3s, box-shadow .3s; }
+.timer-digits { font-size: clamp(38px, 6vw, 56px); color: var(--nvr-gold); line-height: 1; text-shadow: 0 0 26px rgba(255, 193, 116, .3); }
+.timer-card.is-low { border-color: var(--nvr-red); animation: timer-alarm 1s ease-in-out infinite; }
+.timer-card.is-low .timer-digits { color: var(--nvr-red); text-shadow: 0 0 26px rgba(214, 69, 80, .5); }
+
+.bar { height: 6px; background: var(--nvr-card-2); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--nvr-gold), var(--nvr-amber)); border-radius: 99px; transition: width .6s cubic-bezier(.2, .8, .3, 1); }
+.bar-red i { background: linear-gradient(90deg, var(--nvr-red), #8f2b33); }
+.bar-gold i { background: linear-gradient(90deg, var(--nvr-amber), var(--nvr-gold)); }
+
+.wrong-banner {
+    background: rgba(168, 46, 46, .18); border: 1px solid var(--nvr-stamp);
+    color: #ffc9cd; border-radius: 12px; padding: 12px 18px; margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.game-columns { display: grid; grid-template-columns: 1fr 1.35fr; gap: 18px; align-items: start; }
+@media (max-width: 980px) { .game-columns { grid-template-columns: 1fr; } }
+.col-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.col-head h2 { margin: 0; font-size: 18px; color: var(--nvr-gold); }
+
+.clues-col { display: flex; flex-direction: column; gap: 12px; }
+.clue-card { background: var(--nvr-card); border: 1px solid var(--nvr-border); border-radius: 12px; padding: 12px 14px; }
+.clue-new { border-color: var(--nvr-gold-2); box-shadow: 0 0 0 1px var(--nvr-gold-2), 0 8px 30px rgba(255, 193, 116, .12); }
+.clue-head { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.clue-title { margin: 4px 0 8px; font-size: 15px; color: var(--nvr-gold); }
+.clue-text { margin: 0; font-size: 14px; line-height: 1.95; color: var(--nvr-text); opacity: .92; }
+.next-clue { background: var(--nvr-card-2); border: 1px dashed var(--nvr-border); border-radius: 12px; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--nvr-muted); }
+.next-clue-flavor { font-size: 12px; }
+
+.suspect-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 980px) { .suspect-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); } }
+.suspect-card {
+    position: relative; background: var(--nvr-card); border: 1px solid var(--nvr-border);
+    border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 8px;
+    transition: transform .22s, border-color .25s, box-shadow .25s, opacity .3s, filter .3s;
+}
+.suspect-card:hover { transform: translateY(-3px); border-color: #35405c; }
+.suspect-card.is-selected { border-color: var(--nvr-amber); box-shadow: 0 0 0 2px var(--nvr-amber), 0 12px 30px rgba(240, 160, 46, .18); }
+.suspect-card.is-excluded { opacity: .62; filter: saturate(.35); }
+.suspect-card-top { display: flex; justify-content: space-between; align-items: center; }
+.suspect-num { color: var(--nvr-muted); font-size: 12px; }
+.suspect-id-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.suspect-id-text { min-width: 0; }
+.suspect-headshot { width: 56px; aspect-ratio: 4/5; border-radius: 8px; overflow: hidden; background: var(--nvr-card-2); flex-shrink: 0; border: 1px solid var(--nvr-border); }
+.suspect-photo { width: 100%; height: 100%; object-fit: cover; object-position: center 18%; display: block; transition: transform .4s; }
+.suspect-card:hover .suspect-photo { transform: scale(1.06); }
+.suspect-stamp { position: absolute; top: 42%; inset-inline-start: 14%; font-size: 15px; z-index: 2; }
+.suspect-name { margin: 0; font-size: 16px; color: var(--nvr-gold); line-height: 1.35; }
+.suspect-role { margin: 2px 0 0; font-size: 11px; color: var(--nvr-muted); }
+.suspect-facts { margin: 0; padding-inline-start: 16px; font-size: 11.5px; line-height: 1.75; color: var(--nvr-text); opacity: .88; }
+.suspect-actions { display: flex; gap: 6px; margin-top: auto; }
+.suspect-actions .btn-dark { flex: 1; padding: 8px 6px; font-size: 12px; }
+
+.accuse-bar { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.accuse-side { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn-accuse { font-size: 17px; }
+.accuse-note { margin: 0; font-size: 11px; color: var(--nvr-muted); }
+
+.notes-drawer { margin-top: 14px; background: var(--nvr-card); border: 1px solid var(--nvr-border); border-radius: 12px; padding: 14px 16px; }
+.notes-drawer h3 { margin: 0 0 10px; font-size: 15px; color: var(--nvr-gold); }
+.notes-drawer textarea {
+    width: 100%; background: var(--nvr-bg); color: var(--nvr-text);
+    border: 1px solid var(--nvr-border); border-radius: 10px; padding: 12px;
+    font: inherit; resize: vertical;
+}
+.notes-drawer textarea:focus { outline: none; border-color: var(--nvr-gold-2); }
+
+/* ---------- النتيجة ---------- */
+.result-screen { text-align: center; padding-top: 8px; }
+.result-head { display: flex; flex-direction: column; align-items: center; gap: 14px; margin-bottom: 22px; }
+.result-stamp { font-size: 15px; }
+.result-stamp small { font-weight: 400; font-size: 11px; }
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.stat-card { background: var(--nvr-card); border: 1px solid var(--nvr-border); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 4px; }
+.stat-value { font-size: 26px; color: var(--nvr-gold); }
+.stat-value.stars { color: var(--nvr-amber); letter-spacing: 4px; }
+.stat-note { font-size: 11px; color: var(--nvr-muted); }
+.culprit-panel, .elimination-panel {
+    background: var(--nvr-card); border: 1px solid var(--nvr-border); border-radius: 14px;
+    padding: 20px 22px; text-align: right; margin-bottom: 16px;
+}
+.culprit-panel h2, .elimination-panel h2 { color: var(--nvr-gold); margin: 8px 0 12px; font-size: 20px; }
+.culprit-panel p { line-height: 2; font-size: 14px; margin: 8px 0; }
+.culprit-summary { color: var(--nvr-gold-2); }
+.elim-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; counter-reset: elim; }
+.elim-list li { position: relative; padding-inline-start: 40px; counter-increment: elim; }
+.elim-list li::before {
+    content: counter(elim, arabic-indic);
+    position: absolute; inset-inline-start: 0; top: 0;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--nvr-amber), var(--nvr-amber-2));
+    color: #241703; font-weight: 800; font-size: 13px;
+    display: grid; place-items: center;
+}
+.elim-list b { font-size: 14px; }
+.elim-list p { margin: 4px 0 0; font-size: 13px; line-height: 1.9; color: var(--nvr-text); opacity: .88; }
+.result-actions { display: flex; flex-direction: column; gap: 10px; align-items: center; margin-top: 8px; }
+.result-actions .btn-amber, .result-actions .btn-dark { min-width: min(360px, 100%); }
+.next-case-hint { font-size: 12px; color: var(--nvr-muted); margin: 8px 0 0; }
+
+.loss-screen { padding-top: 5vh; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.loss-icon {
+    width: 84px; height: 84px; display: grid; place-items: center; font-size: 38px;
+    background: var(--nvr-card); border: 1px solid var(--nvr-border); border-radius: 20px;
+}
+.loss-case { margin: 0; font-size: 18px; }
+.loss-text { color: var(--nvr-muted); margin: 4px 0 12px; }
+
+.records-screen { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+.record-card { background: var(--nvr-card); border: 1px solid var(--nvr-gold-2); border-radius: 12px; padding: 16px 20px; }
+.record-card h2 { margin: 8px 0 6px; color: var(--nvr-gold); font-size: 18px; }
+.record-card p { margin: 0; font-size: 14px; color: var(--nvr-text); opacity: .85; }
+.records-empty { color: var(--nvr-muted); }
+
+/* ---------- الفوتر ---------- */
+.game-footer {
+    display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+    border-top: 1px solid var(--nvr-border); margin-top: 28px; padding-top: 12px;
+    font-size: 11px; color: var(--nvr-muted);
+}
+
+/* ---------- تحكم الصوت ---------- */
+.audio-control { position: relative; }
+.audio-pop {
+    position: absolute; top: calc(100% + 8px); inset-inline-end: 0; z-index: 30;
+    background: var(--nvr-card); border: 1px solid var(--nvr-border); border-radius: 12px;
+    padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 210px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, .5);
+}
+.audio-pop input[type='range'] { width: 100%; accent-color: var(--nvr-amber); }
+.eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+.eq i { width: 3px; height: 4px; background: currentColor; border-radius: 1px; }
+.eq-on i { animation: eq-bounce .9s ease-in-out infinite; }
+.eq-on i:nth-child(2) { animation-delay: .15s; }
+.eq-on i:nth-child(3) { animation-delay: .3s; }
+
+/* ---------- نظام الحركة ---------- */
+@keyframes fade-down { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+@keyframes fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes rise { from { opacity: 0; transform: translateY(22px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes scale-in { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: scale(1); } }
+@keyframes pop { 0% { opacity: 0; transform: scale(.85); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes clue-in { 0% { opacity: 0; transform: translateY(18px) scale(.97); box-shadow: 0 0 0 0 rgba(255, 193, 116, .5); } 60% { box-shadow: 0 0 0 6px rgba(255, 193, 116, .18); } 100% { opacity: 1; transform: none; box-shadow: 0 0 0 1px var(--nvr-gold-2), 0 8px 30px rgba(255, 193, 116, .12); } }
+@keyframes stamp-in { 0% { opacity: 0; transform: rotate(-18deg) scale(2.1); } 100% { opacity: 1; transform: rotate(-6deg) scale(1); } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+@keyframes timer-alarm { 0%, 100% { box-shadow: 0 0 0 0 rgba(214, 69, 80, .0); } 50% { box-shadow: 0 0 0 4px rgba(214, 69, 80, .25); } }
+@keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-7px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
+@keyframes slow-zoom { from { transform: scale(1); } to { transform: scale(1.08); } }
+@keyframes eq-bounce { 0%, 100% { height: 4px; } 50% { height: 12px; } }
+
+.anim-fade-down { animation: fade-down .5s cubic-bezier(.2, .8, .3, 1) both; }
+.anim-fade-up { animation: fade-up .5s cubic-bezier(.2, .8, .3, 1) both; }
+.anim-rise { animation: rise .55s cubic-bezier(.2, .8, .3, 1) both; }
+.anim-scale { animation: scale-in .55s cubic-bezier(.2, .8, .3, 1) both; }
+.anim-pop { animation: pop .3s cubic-bezier(.2, 1.6, .4, 1) both; }
+.anim-clue { animation: clue-in .8s cubic-bezier(.2, .8, .3, 1) both; }
+.screen-enter { animation: fade-up .45s cubic-bezier(.2, .8, .3, 1) both; }
+.screen-leave { animation: fade-up .45s cubic-bezier(.2, .8, .3, 1) reverse both; }
+.shake { animation: shake .45s ease-in-out; }
+
+@media (prefers-reduced-motion: reduce) {
+    .noir-app *, .noir-app *::before, .noir-app *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
+}
+
+/* حماية من التمرير الأفقي على الموبايل */
+.noir-app { overflow-x: clip; max-width: 100%; }
+.noir-app img { max-width: 100%; height: auto; }
+.suspect-headshot img, .case-card-media img { height: 100%; }
+@media (max-width: 480px) {
+    .display-title { font-size: 30px !important; }
+    .timer-digits { font-size: 40px !important; }
+    .header-title { font-size: 15px; }
+    .hud-card, .clue-card, .suspect-card { padding: 12px; }
+}
+.source-link { color: var(--nvr-amber); text-decoration: underline; font-size: 12px; }
+.source-link:hover { opacity: .85; }
+@media (max-width: 767px) {
+    .noir-app { margin: 0; left: 0; width: 100%; max-width: 100%; padding: 20px 14px; }
+}
+
+.accuse-bar .btn-accuse { min-width: min(340px, 100%); }

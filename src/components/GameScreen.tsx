@@ -1,0 +1,244 @@
+// ============================================================================
+// شاشة اللعب — الأدلة بتظهر بالترتيب وتفضل ظاهرة، الاستبعاد والاتهام بإيد اللاعب.
+// ============================================================================
+
+import React, { useEffect, useRef, useState } from 'react';
+import type { CaseData, Clue, Suspect } from '../game/cases';
+import { formatClock, DEFAULT_SETTINGS, type EngineApi } from '../game/engine';
+import { noirAudio } from '../game/audio';
+import { toArabicNumeral } from './ArchiveScreen';
+
+import photoSulaiman from '../photos/suspect-sulaiman.jpg';
+import photoZanouba from '../photos/suspect-zanouba.jpg';
+import photoFarid from '../photos/suspect-farid.jpg';
+import photoLayla from '../photos/suspect-layla.jpg';
+import photoKamel from '../photos/suspect-kamel.jpg';
+
+const PHOTOS: Record<string, string> = {
+    sulaiman: photoSulaiman,
+    zanouba: photoZanouba,
+    farid: photoFarid,
+    layla: photoLayla,
+    kamel: photoKamel,
+};
+
+const notesKey = (caseId: string) => `cairo-archive-notes-${caseId}`;
+
+export function GameScreen({ caseData, engine, onExit }: { caseData: CaseData; engine: EngineApi; onExit: () => void }) {
+    const { state, remainingMs, revealedCount, visibleClues, nextClueInMs } = engine;
+    const [flashWrong, setFlashWrong] = useState(false);
+    const [notesOpen, setNotesOpen] = useState(false);
+    const [notes, setNotes] = useState(() => { try { return localStorage.getItem(notesKey(caseData.id)) ?? ''; } catch { return ''; } });
+    const prevWrong = useRef(state.wrongAccusations);
+    const prevRevealed = useRef(revealedCount);
+
+    // وميض أحمر + صوت عند الاتهام الغلط
+    useEffect(() => {
+        if (state.wrongAccusations > prevWrong.current) {
+            setFlashWrong(true);
+            noirAudio.sfxWrong();
+            const t = window.setTimeout(() => setFlashWrong(false), 900);
+            return () => window.clearTimeout(t);
+        }
+        prevWrong.current = state.wrongAccusations;
+    }, [state.wrongAccusations]);
+
+    // صوت وصول دليل جديد
+    useEffect(() => {
+        if (revealedCount > prevRevealed.current) noirAudio.sfxClue();
+        prevRevealed.current = revealedCount;
+    }, [revealedCount]);
+
+    // انتقالات النتايج بتتعامل من App (status وصل won/lost)
+    useEffect(() => {
+        if (state.status === 'won') noirAudio.sfxWin();
+        if (state.status === 'lost') noirAudio.sfxLoss();
+    }, [state.status]);
+
+    const lowTime = remainingMs <= 30_000;
+    const selectedSuspect = caseData.suspects.find((s) => s.id === state.selected) ?? null;
+
+    return (
+        <main className={`game-screen screen-enter ${flashWrong ? 'shake' : ''}`}>
+            {/* رأس القضية */}
+            <section className="case-head anim-fade-up" aria-label="بيانات القضية">
+                <div className="case-head-meta">
+                    <span>{caseData.level} · {caseData.difficulty}</span>
+                    <span>{caseData.setting}</span>
+                </div>
+                <h1 className="display-title">قضية {toArabicNumeral(caseData.number)}: {caseData.title}</h1>
+                {caseData.intro.map((p, i) => <p key={i} className="case-intro">{p}</p>)}
+            </section>
+
+            {/* التايمر والعدادات */}
+            <section className="hud anim-fade-up" style={{ animationDelay: '80ms' }} aria-label="حالة التحقيق">
+                <div className={`hud-card timer-card ${lowTime ? 'is-low' : ''}`}>
+                    <span className="hud-label">العد التنازلي لإغلاق التحقيق</span>
+                    <span className="timer-digits" role="timer" aria-live="off">{formatClock(remainingMs)}</span>
+                    <span className="hud-warn">⚠ اتهام خاطئ يخصم {toArabicNumeral(DEFAULT_SETTINGS.wrongAccusePenaltySeconds)} ثانية فورًا!</span>
+                </div>
+                <div className="hud-card">
+                    <div className="hud-row">
+                        <span className="hud-label">📜 الأدلة المكتشفة</span>
+                        <b>{toArabicNumeral(revealedCount)} من {toArabicNumeral(visibleClues.length)}</b>
+                    </div>
+                    <div className="bar"><i style={{ width: `${(revealedCount / visibleClues.length) * 100}%` }} /></div>
+                    <div className="hud-row">
+                        <span className="hud-label">🚫 المستبعدون</span>
+                        <b>{toArabicNumeral(state.excluded.length)} من {toArabicNumeral(caseData.suspects.length)}</b>
+                    </div>
+                    <div className="bar bar-red"><i style={{ width: `${(state.excluded.length / caseData.suspects.length) * 100}%` }} /></div>
+                </div>
+            </section>
+
+            {flashWrong && (
+                <div className="wrong-banner anim-pop" role="alert">
+                    {caseData.lossText} <b>-{toArabicNumeral(DEFAULT_SETTINGS.wrongAccusePenaltySeconds)} ثانية</b>
+                </div>
+            )}
+
+            <div className="game-columns">
+                {/* خيوط الجريمة والأدلة */}
+                <section className="clues-col" aria-label="خيوط الجريمة والأدلة">
+                    <div className="col-head">
+                        <h2>📌 خيوط الجريمة والأدلة</h2>
+                        <span className="chip chip-dark">قسم الأدلة الجنائية</span>
+                    </div>
+                    {visibleClues.map((clue, i) => (
+                        <ClueCard key={clue.id} clue={clue} isNew={i === revealedCount - 1 && revealedCount > 0} />
+                    ))}
+                    {nextClueInMs !== null && (
+                        <div className="next-clue anim-fade-up" aria-live="polite">
+                            <span>الدليل القادم خلال <b className="gold-text">{formatClock(nextClueInMs)}</b></span>
+                            <div className="bar bar-gold">
+                                <i style={{ width: `${100 - (nextClueInMs / (DEFAULT_SETTINGS.clueIntervalSeconds * 1000)) * 100}%` }} />
+                            </div>
+                            <span className="next-clue-flavor">🔬 المعمل الجنائي بيحلل البصمات…</span>
+                        </div>
+                    )}
+                </section>
+
+                {/* ساحة المشتبه فيهم */}
+                <section className="suspects-col" aria-label="ساحة المشتبه فيهم">
+                    <div className="col-head">
+                        <h2>🕵️ ساحة المشتبه فيهم</h2>
+                        <span className="hud-label">اضغط «اختيار الاتهام» لتحديد الهدف</span>
+                    </div>
+                    <div className="suspect-grid">
+                        {caseData.suspects.map((s, i) => (
+                            <SuspectCard
+                                key={s.id}
+                                suspect={s}
+                                index={i}
+                                excluded={state.excluded.includes(s.id)}
+                                selected={state.selected === s.id}
+                                onExclude={() => { noirAudio.sfxStamp(); engine.exclude(s.id); }}
+                                onUndo={() => engine.undoExclude(s.id)}
+                                onSelect={() => engine.select(state.selected === s.id ? null : s.id)}
+                            />
+                        ))}
+                    </div>
+                </section>
+            </div>
+
+            {/* شريط الاتهام */}
+            <section className="accuse-bar anim-fade-up" style={{ animationDelay: '120ms' }}>
+                <div className="accuse-side">
+                    <button type="button" className="chip chip-button" onClick={() => setNotesOpen((v) => !v)}>📝 دفتر ملاحظاتي</button>
+                    <button type="button" className="chip chip-button" onClick={onExit}>📋 العودة لأرشيف القضايا</button>
+                </div>
+                <button
+                    type="button"
+                    className="btn-amber btn-accuse"
+                    disabled={!selectedSuspect}
+                    onClick={() => selectedSuspect && engine.accuse(selectedSuspect.id)}
+                >
+                    📢 {selectedSuspect ? `اتهم المشتبه فيه الآن (${selectedSuspect.name})` : 'حدد المشتبه فيه أولًا من كارته'}
+                </button>
+                <p className="accuse-note">تنبيه المحقق: توجيه اتهام خاطئ يخصم {toArabicNumeral(DEFAULT_SETTINGS.wrongAccusePenaltySeconds)} ثانية فورًا — الخطأ في تحديد اللص بيكلفك وقتًا وقد يضيّع القضية.</p>
+            </section>
+
+            {notesOpen && (
+                <section className="notes-drawer anim-pop" aria-label="دفتر الملاحظات">
+                    <h3>📝 دفتر ملاحظاتي</h3>
+                    <textarea
+                        value={notes}
+                        onChange={(e) => {
+                            setNotes(e.target.value);
+                            try { localStorage.setItem(notesKey(caseData.id), e.target.value); } catch { /* ignore */ }
+                        }}
+                        placeholder="سجّلي ملاحظاتك عن الأدلة والمشتبه فيهم هنا…"
+                        rows={5}
+                    />
+                </section>
+            )}
+        </main>
+    );
+}
+
+function ClueCard({ clue, isNew }: { clue: Clue; isNew: boolean }) {
+    return (
+        <article className={`clue-card ${isNew ? 'clue-new anim-clue' : 'anim-fade-up'}`}>
+            <header className="clue-head">
+                <span className="chip chip-dark">🕰️ {clue.stamp}</span>
+                {isNew && <span className="chip chip-gold chip-pulse">+ دليل جديد</span>}
+            </header>
+            <h3 className="clue-title">{clue.title}</h3>
+            <p className="clue-text">{clue.text}</p>
+        </article>
+    );
+}
+
+function SuspectCard(props: {
+    suspect: Suspect;
+    index: number;
+    excluded: boolean;
+    selected: boolean;
+    onExclude: () => void;
+    onUndo: () => void;
+    onSelect: () => void;
+}) {
+    const { suspect, index, excluded, selected } = props;
+    return (
+        <article
+            className={`suspect-card anim-rise ${excluded ? 'is-excluded' : ''} ${selected ? 'is-selected' : ''}`}
+            style={{ animationDelay: `${index * 80}ms` }}
+        >
+            <div className="suspect-card-top">
+                <span className="suspect-num">#{toArabicNumeral(index + 1)}</span>
+                {excluded ? (
+                    <span className="chip chip-dark">خارج الشبهات</span>
+                ) : selected ? (
+                    <span className="chip chip-gold">المتهم المختار</span>
+                ) : (
+                    <span className="chip chip-dark">قيد التحقيق</span>
+                )}
+            </div>
+            <div className="suspect-id-row">
+                <div className="suspect-id-text">
+                    <h3 className="suspect-name">{suspect.name}</h3>
+                    <p className="suspect-role">{suspect.role} · {suspect.age}</p>
+                </div>
+                <div className="suspect-headshot">
+                    <img className="suspect-photo" src={PHOTOS[suspect.photo]} alt={`صورة توضيحية للمشتبه فيه ${suspect.name}`} />
+                </div>
+            </div>
+            <ul className="suspect-facts">
+                {suspect.facts.map((f, i) => <li key={i}>{f}</li>)}
+            </ul>
+            {excluded && <span className="stamp stamp-red stamp-anim suspect-stamp">مستبعدة ✓</span>}
+            <div className="suspect-actions">
+                {excluded ? (
+                    <button type="button" className="btn-dark btn-block" onClick={props.onUndo}>↩️ تراجع عن الاستبعاد</button>
+                ) : (
+                    <>
+                        <button type="button" className="btn-dark" onClick={props.onExclude}>استبعاد</button>
+                        <button type="button" className={`btn-dark ${selected ? 'is-armed' : ''}`} onClick={props.onSelect}>
+                            {selected ? '✕ إلغاء التحديد' : 'اختيار الاتهام'}
+                        </button>
+                    </>
+                )}
+            </div>
+        </article>
+    );
+}
