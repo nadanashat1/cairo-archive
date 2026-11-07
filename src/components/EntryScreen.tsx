@@ -254,7 +254,7 @@ export function EntryScreen({ onEnter }: { onEnter: () => void }) {
                 </section>
 
                 <p className="entry-footer anim-fade-up" style={{ animationDelay: '320ms' }}>
-                    نظام الأرشيف: <b className="ok-dot">متصل</b> · دفتر أحوال الجنايات · القاهرة الخديوية ١٩٥٢ 📻
+                    صُنعت بواسطة <b className="gold-text">ندى نشأت</b> 🤍 · نظام الأرشيف: <b className="ok-dot">متصل</b> · دفتر أحوال الجنايات · القاهرة الخديوية ١٩٥٢ 📻
                 </p>
             </div>
         </div>
