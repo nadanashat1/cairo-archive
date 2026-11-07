@@ -5,6 +5,23 @@
 import React from 'react';
 import { ARCHIVE_SLOTS } from '../game/cases';
 import cover from '../photos/case-cover.jpg';
+import caseTea from '../photos/case-2-tea.png';
+import caseOffice from '../photos/case-3-office.png';
+import caseTrain from '../photos/case-4-train.png';
+import caseCasino from '../photos/case-5-casino.png';
+import casePainting from '../photos/case-6-painting.png';
+import caseOpera from '../photos/case-7-opera.png';
+import caseHotel from '../photos/case-8-hotel.png';
+
+const LOCKED_ART: Record<number, { src: string; alt: string }> = {
+    2: { src: caseTea, alt: 'فنجان شاي جنب زجاجة سم على صينية نحاس — جو قضية سم في فنجان الشاي' },
+    3: { src: caseOffice, alt: 'باب مكتب مقفول والنور خارج من تحته — جو قضية جريمة في المكتب المقفول' },
+    4: { src: caseTrain, alt: 'قطار بخاري ليلي في محطة مليانة ضباب — جو قضية لغز قطار الإسكندرية' },
+    5: { src: caseCasino, alt: 'ترابيزة كازينو قدام نيل الليل — جو قضية جريمة كازينو النيل' },
+    6: { src: casePainting, alt: 'إطار لوحة دهب فاضي على حيطة قصر — جو قضية اختفاء لوحة الباشا' },
+    7: { src: caseOpera, alt: 'علبة جواهر مخمل فاضية قدام الأوبرا — جو قضية سرقة جواهر أوبرا الخديوي' },
+    8: { src: caseHotel, alt: 'شنطة مفتوحة فاضية في بهو فندق فخم — جو قضية جريمة فندق شبرد' },
+};
 
 export function ArchiveScreen({ onPlay }: { onPlay: (caseId: string) => void }) {
     return (
@@ -24,7 +41,7 @@ export function ArchiveScreen({ onPlay }: { onPlay: (caseId: string) => void }) 
                             {slot.state === 'playable' ? (
                                 <img src={cover} alt="غلاف توضيحي لقضية أسورة الهانم" />
                             ) : (
-                                <div className="case-card-locked-art" aria-hidden>🗂️</div>
+                                <img src={LOCKED_ART[slot.number]!.src} alt={LOCKED_ART[slot.number]!.alt} />
                             )}
                             <span className={`chip ${slot.state === 'playable' ? 'chip-gold' : 'chip-dark'}`}>
                                 {slot.state === 'playable' ? '● الدور عليك' : '🔒 مقفلة'}
