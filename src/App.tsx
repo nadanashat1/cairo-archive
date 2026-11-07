@@ -29,6 +29,7 @@ function GameFlow({ caseData, onArchive }: { caseData: CaseData; onArchive: () =
                 remainingMs={engine.remainingMs}
                 wrongAccusations={s.wrongAccusations}
                 cluesUsed={engine.revealedCount}
+                totalClues={engine.totalClues}
                 onReplay={() => engine.restart(false)}
                 onArchive={onArchive}
             />
