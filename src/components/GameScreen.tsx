@@ -110,7 +110,7 @@ export function GameScreen({ caseData, engine, onExit }: { caseData: CaseData; e
                 <section className="start-banner anim-pop" aria-label="بدء التحقيق">
                     <div className="start-banner-text">
                         <h2>🗂️ اقرأ ملف القضية وكروت المشتبه فيهم براحتك</h2>
-                        <p>مفيش عد تنازلي دلوقتي. لما تكون جاهز، دوس «ابدأ التحقيق» — الوقت هيبدأ وأول دليل هيظهر فورًا، وباقي الأدلة في أظرف مختومة تفتحها لما تحس إن اللي معاك مش كفاية. كل ما تفتح أظرف أقل تقييمك يعلى، ولو حليتها قبل آخر ظرف تستاهل لقب «محقق محصلش» 🏆.</p>
+                        <p>مفيش عد تنازلي دلوقتي. لما تكون جاهز، دوس «ابدأ التحقيق» — الوقت هيبدأ وأول دليل هيظهر فورًا، وباقي الأدلة في أظرف مختومة تفتحها لما تحس إن اللي معاك مش كفاية. كل ما تفتح أظرف أقل درجة استدلالك تعلا، ولو حليتها قبل آخر ظرف تستاهل لقب «محقق محصلش» 🏆.</p>
                     </div>
                     <button type="button" className="btn-amber btn-start" onClick={() => engine.start()}>
                         🕵️ ابدأ التحقيق
@@ -152,7 +152,7 @@ export function GameScreen({ caseData, engine, onExit }: { caseData: CaseData; e
                                 <button type="button" className="btn-amber envelope-open" onClick={() => engine.openClue()}>
                                     🔓 افتح الظرف
                                 </button>
-                                <span className="hud-label">متبقي {envelopesLabel(envelopesRemaining)} · كل ظرف إضافي بيقلل تقييمك النهائي</span>
+                                <span className="hud-label">متبقي {envelopesLabel(envelopesRemaining)} · كل ظرف إضافي بينزّل درجة استدلالك</span>
                             </div>
                         </div>
                     )}
