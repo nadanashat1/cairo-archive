@@ -16,8 +16,8 @@ export function WinScreen({ caseData, remainingMs, wrongAccusations, cluesUsed, 
     onArchive: () => void;
 }) {
     const culprit = caseData.suspects.find((s) => s.id === caseData.culpritId)!;
-    const culpritLabel = caseData.culpritRoleLabel ?? 'اللص الحقيقي';
-    const winHeadline = caseData.winHeadline ?? 'مبروك يا محقق! كشفت اللص قبل فوات الأوان ⚖️';
+    const culpritLabel = caseData.culpritRoleLabel ?? 'الجاني الحقيقي';
+    const winHeadline = caseData.winHeadline ?? 'مبروك يا محقق! كشفت الجاني قبل فوات الأوان ⚖️';
     const registerLine = caseData.winRegisterLine ?? 'النيابة العامة - قطاع الجنايات · سجل رقم ٥٢٤/١٩٥٢';
     const stars = wrongAccusations === 0 ? 3 : wrongAccusations <= 2 ? 2 : 1;
     const rating = stars === 3 ? 'محقق عبقري' : stars === 2 ? 'محقق شاطر' : 'محقق مثابر';
@@ -56,7 +56,7 @@ export function WinScreen({ caseData, remainingMs, wrongAccusations, cluesUsed, 
                 </div>
             </section>
 
-            <section className="culprit-panel anim-fade-up" style={{ animationDelay: '200ms' }} aria-label="ملف اللص">
+            <section className="culprit-panel anim-fade-up" style={{ animationDelay: '200ms' }} aria-label="ملف الجاني">
                 <span className="chip chip-gold">ملف المتهم</span>
                 <h2>{culprit.name} — {culpritLabel}</h2>
                 <p>{caseData.winText}</p>
