@@ -1,5 +1,5 @@
 // ============================================================================
-// شاشة اللعب — الأدلة بتظهر بالترتيب وتفضل ظاهرة، الاستبعاد والاتهام بإيد اللاعب.
+// شاشة اللعب — أول دليل فوري والباقي في أظرف مختومة بتتفتح عند الطلب، الاستبعاد والاتهام بإيد اللاعب.
 // ============================================================================
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -37,7 +37,7 @@ const PHOTOS: Record<string, string> = {
 const notesKey = (caseId: string, scope: string) => `cairo-archive-notes-${caseId}-${scope}`;
 
 export function GameScreen({ caseData, engine, onExit }: { caseData: CaseData; engine: EngineApi; onExit: () => void }) {
-    const { state, remainingMs, revealedCount, totalClues, visibleClues, nextClueInMs } = engine;
+    const { state, remainingMs, revealedCount, totalClues, visibleClues, envelopesRemaining } = engine;
     const reading = state.status === 'reading';
     const [flashWrong, setFlashWrong] = useState(false);
     const [notesOpen, setNotesOpen] = useState(false);
@@ -110,7 +110,7 @@ export function GameScreen({ caseData, engine, onExit }: { caseData: CaseData; e
                 <section className="start-banner anim-pop" aria-label="بدء التحقيق">
                     <div className="start-banner-text">
                         <h2>🗂️ اقرأ ملف القضية وكروت المشتبه فيهم براحتك</h2>
-                        <p>مفيش عد تنازلي دلوقتي. لما تكون جاهز، دوس «ابدأ التحقيق» — ساعتها الوقت هيبدأ وأول دليل هيظهر فورًا.</p>
+                        <p>مفيش عد تنازلي دلوقتي. لما تكون جاهز، دوس «ابدأ التحقيق» — الوقت هيبدأ وأول دليل هيظهر فورًا، وباقي الأدلة في أظرف مختومة تفتحها لما تحس إن اللي معاك مش كفاية. كل ما تفتح أظرف أقل تقييمك يعلى، ولو حليتها قبل آخر ظرف تستاهل لقب «محقق محصلش» 🏆.</p>
                     </div>
                     <button type="button" className="btn-amber btn-start" onClick={() => engine.start()}>
                         🕵️ ابدأ التحقيق
@@ -133,21 +133,31 @@ export function GameScreen({ caseData, engine, onExit }: { caseData: CaseData; e
                     </div>
                     {reading && (
                         <div className="next-clue anim-fade-up" aria-live="polite">
-                            <span>🔒 الأدلة مقفولة لحد ما يبدأ التحقيق — أول دليل هيظهر فور الضغط على «ابدأ التحقيق».</span>
+                            <span>🔒 الأدلة مقفولة لحد ما يبدأ التحقيق — أول دليل هيظهر فور الضغط على «ابدأ التحقيق»، والباقي في أظرف مختومة تفتحها وقت ما تحتاجها.</span>
                             <span className="next-clue-flavor">🕰️ خد وقتك في القراءة، مفيش وقت بيعدي دلوقتي.</span>
                         </div>
                     )}
                     {visibleClues.map((clue, i) => (
                         <ClueCard key={clue.id} clue={clue} isNew={i === revealedCount - 1 && revealedCount > 0} />
                     ))}
-                    {nextClueInMs !== null && (
-                        <div className="next-clue anim-fade-up" aria-live="polite">
-                            <span>الدليل القادم خلال <b className="gold-text">{formatClock(nextClueInMs)}</b></span>
-                            <div className="bar bar-gold">
-                                <i style={{ width: `${100 - (nextClueInMs / (DEFAULT_SETTINGS.clueIntervalSeconds * 1000)) * 100}%` }} />
+                    {!reading && envelopesRemaining > 0 && (
+                        <div className="envelope-card anim-fade-up" aria-live="polite">
+                            <div className="envelope-visual">
+                                <span className="envelope-icon" aria-hidden>✉️</span>
+                                <span className="envelope-title">ظرف مختوم من قسم الأدلة الجنائية</span>
+                                <span className="envelope-seal" aria-hidden>★</span>
                             </div>
-                            <span className="next-clue-flavor">🔬 المعمل الجنائي بيحلل البصمات…</span>
+                            <span className="envelope-hint">الأدلة اللي معاك مش كفاية؟ افتح الظرف اللي بعده — التايمر شغال، فاختار وقتك بذكاء.</span>
+                            <div className="envelope-meta">
+                                <button type="button" className="btn-amber envelope-open" onClick={() => engine.openClue()}>
+                                    🔓 افتح الظرف
+                                </button>
+                                <span className="hud-label">متبقي {envelopesLabel(envelopesRemaining)} · كل ظرف إضافي بيقلل تقييمك النهائي</span>
+                            </div>
                         </div>
+                    )}
+                    {!reading && envelopesRemaining === 0 && (
+                        <div className="envelopes-done anim-fade-up">📂 كل الأظرف اتفتحت — الأدلة كاملة قدامك، وربط الخيوط عليك يا محقق.</div>
                     )}
                 </section>
 
@@ -208,6 +218,12 @@ export function GameScreen({ caseData, engine, onExit }: { caseData: CaseData; e
             )}
         </main>
     );
+}
+
+function envelopesLabel(n: number): string {
+    if (n === 1) return 'ظرف واحد';
+    if (n === 2) return 'ظرفين';
+    return `${toArabicNumeral(n)} أظرف`;
 }
 
 function ClueCard({ clue, isNew }: { clue: Clue; isNew: boolean }) {
