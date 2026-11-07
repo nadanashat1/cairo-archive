@@ -13,7 +13,7 @@ import casePainting from '../photos/5-case-6-painting.png';
 import caseOpera from '../photos/6-case-7-opera.png';
 import caseHotel from '../photos/7-case-8-hotel.png';
 
-const LOCKED_ART: Record<number, { src: string; alt: string }> = {
+const CASE_ART: Record<number, { src: string; alt: string }> = {
     2: { src: caseTea, alt: 'فنجان شاي جنب زجاجة سم على صينية نحاس — جو قضية سم في فنجان الشاي' },
     3: { src: caseOffice, alt: 'باب مكتب مقفول والنور خارج من تحته — جو قضية جريمة في المكتب المقفول' },
     4: { src: caseTrain, alt: 'قطار بخاري ليلي في محطة مليانة ضباب — جو قضية لغز قطار الإسكندرية' },
@@ -38,11 +38,14 @@ export function ArchiveScreen({ onPlay }: { onPlay: (caseId: string) => void }) 
                         style={{ animationDelay: `${i * 90}ms` }}
                     >
                         <div className="case-card-media">
-                            {slot.state === 'playable' ? (
-                                <img src={cover} alt="غلاف توضيحي لقضية أسورة الهانم" />
-                            ) : (
-                                <img src={LOCKED_ART[slot.number]!.src} alt={LOCKED_ART[slot.number]!.alt} />
-                            )}
+                            {(() => {
+                                const art = CASE_ART[slot.number];
+                                return art ? (
+                                    <img src={art.src} alt={art.alt} />
+                                ) : (
+                                    <img src={cover} alt="غلاف توضيحي لقضية أسورة الهانم" />
+                                );
+                            })()}
                             <span className={`chip ${slot.state === 'playable' ? 'chip-gold' : 'chip-dark'}`}>
                                 {slot.state === 'playable' ? '● الدور عليك' : '🔒 مقفلة'}
                             </span>
@@ -66,3 +69,4 @@ export function toArabicNumeral(n: number): string {
     const digits = '٠١٢٣٤٥٦٧٨٩';
     return String(n).split('').map((d) => digits[Number(d)] ?? d).join('');
 }
+
