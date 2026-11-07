@@ -27,16 +27,15 @@ html, body, #root { margin: 0; min-height: 100%; }
         var(--nvr-bg);
     color: var(--nvr-text);
     min-height: 100vh;
-    margin: -24px 0;
+    margin: 0;
     position: relative;
-    left: -24px;
-    width: calc(100% + 48px);
+    width: 100%;
     padding: 24px;
     direction: rtl;
     text-align: right;
     font-family: 'Cairo', 'Geeza Pro', 'Segoe UI', Tahoma, 'Noto Sans Arabic', 'Noto Naskh Arabic', Arial, sans-serif;
 }
-@media (min-width: 768px) { .noir-app { margin: -36px 0; left: -36px; width: calc(100% + 72px); padding: 32px; } }
+@media (min-width: 768px) { .noir-app { padding: 32px; } }
 
 .noir-app, .noir-app * { box-sizing: border-box; }
 
