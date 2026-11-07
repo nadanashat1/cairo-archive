@@ -54,7 +54,7 @@ function RecordsScreen({ onArchive }: { onArchive: () => void }) {
             {wonCases.length > 0 ? (
                 wonCases.map(({ slot, caseData }) => {
                     const culprit = caseData.suspects.find((c) => c.id === caseData.culpritId)!;
-                    const label = caseData.recordLabel ?? 'اللص';
+                    const label = caseData.recordLabel ?? 'الجاني';
                     return (
                         <article className="record-card anim-rise" key={caseData.id}>
                             <span className="chip chip-gold">إدانة مؤكدة ✓</span>
