@@ -189,7 +189,7 @@ export function GameScreen({ caseData, engine, onExit }: { caseData: CaseData; e
                 >
                     📢 {reading ? 'الاتهام متاح بعد ما يبدأ التحقيق' : selectedSuspect ? `اتهم المشتبه فيه الآن (${selectedSuspect.name})` : 'حدد المشتبه فيه أولًا من كارته'}
                 </button>
-                <p className="accuse-note">تنبيه المحقق: توجيه اتهام خاطئ يخصم {toArabicNumeral(DEFAULT_SETTINGS.wrongAccusePenaltySeconds)} ثانية فورًا — الخطأ في تحديد اللص بيكلفك وقتًا وقد يضيّع القضية.</p>
+                <p className="accuse-note">تنبيه المحقق: توجيه اتهام خاطئ يخصم {toArabicNumeral(DEFAULT_SETTINGS.wrongAccusePenaltySeconds)} ثانية فورًا — الخطأ في تحديد الجاني بيكلفك وقتًا وقد يضيّع القضية.</p>
             </section>
 
             {notesOpen && (
