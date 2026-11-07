@@ -111,7 +111,7 @@ export function GameHeader({ activeTab, onNavigate }: { activeTab: 'case' | 'arc
                         <span className="header-title">أرشيف القاهرة: قضايا الليل</span>
                         <span className="chip chip-secret">ملف سري ٤٢٤#</span>
                     </div>
-                    <div className="header-sub">المحقق: سراج مهران · القضية: أسورة الهانم</div>
+                    <div className="header-sub">المحقق: {displayName} · القضية: أسورة الهانم</div>
                 </div>
             </div>
             <nav className="header-nav" aria-label="التنقل الرئيسي">
