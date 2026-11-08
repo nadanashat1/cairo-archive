@@ -55,6 +55,21 @@ import photoZeinab from '../photos/18-32-suspect-zeinab.jpg';
 import photoAbedQena from '../photos/19-33-suspect-abed-qena.jpg';
 import photoMabrouk from '../photos/20-34-suspect-mabrouk.jpg';
 import photoFarag from '../photos/21-35-suspect-farag.jpg';
+import photoEmil from '../photos/1-36-suspect-emil.jpg';
+import photoFattouh from '../photos/2-37-suspect-fattouh.jpg';
+import photoZeinat from '../photos/3-38-suspect-zeinat.jpg';
+import photoBibo from '../photos/4-39-suspect-bibo.jpg';
+import photoShafik from '../photos/5-40-suspect-shafik.jpg';
+import photoEzzat from '../photos/6-41-suspect-ezzat.jpg';
+import photoKawsar from '../photos/7-42-suspect-kawsar.jpg';
+import photoFouadSaei from '../photos/8-43-suspect-fouad-saei.jpg';
+import photoNabila from '../photos/9-44-suspect-nabila.jpg';
+import photoShawqy from '../photos/10-45-suspect-shawqy.jpg';
+import photoShaaban from '../photos/11-46-suspect-shaaban.jpg';
+import photoAbdelkarim from '../photos/12-47-suspect-abdelkarim.jpg';
+import photoZaki from '../photos/13-48-suspect-zaki.jpg';
+import photoSafwat from '../photos/14-49-suspect-safwat.jpg';
+import photoFarahat from '../photos/15-50-suspect-farahat.jpg';
 
 const PHOTOS: Record<string, string> = {
     sawsanOpera: photoSawsanOpera,
@@ -72,6 +87,21 @@ const PHOTOS: Record<string, string> = {
     abedQena: photoAbedQena,
     mabrouk: photoMabrouk,
     farag: photoFarag,
+    emil: photoEmil,
+    fattouh: photoFattouh,
+    zeinat: photoZeinat,
+    bibo: photoBibo,
+    shafik: photoShafik,
+    ezzat: photoEzzat,
+    kawsar: photoKawsar,
+    fouadSaei: photoFouadSaei,
+    nabila: photoNabila,
+    shawqy: photoShawqy,
+    shaaban: photoShaaban,
+    abdelkarim: photoAbdelkarim,
+    zaki: photoZaki,
+    safwat: photoSafwat,
+    farahat: photoFarahat,
     sulaiman: photoSulaiman,
     zanouba: photoZanouba,
     farid: photoFarid,
@@ -373,6 +403,7 @@ function SuspectCard(props: {
         </article>
     );
 }
+
 
 
 
