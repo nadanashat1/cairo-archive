@@ -35,15 +35,17 @@ function PasswordInput({ value, onChange, label, autoComplete }: { value: string
 export function EntryScreen({ onEnter }: { onEnter: () => void }) {
     const { signIn, signUp, signOut, recovery, requestPasswordReset, updatePassword } = useAuth();
     const [mode, setMode] = useState<'login' | 'signup'>('login');
-    // لو اللاعب كان مسجّل دخول في نفس التبويب وبعدين رجع لشاشة الدخول من غير ما يدوس خروج، نعرض السبب المحتمل.
+    // تشخيص: لو فيه علامة دخول سابقة (كوكي) ورجعنا لشاشة الدخول من غير خروج، نعرض إيه اللي لسه موجود وإيه اللي اتمسح.
     const [logoutDiag] = useState<string | null>(() => {
         try {
-            if (sessionStorage.getItem('ca-login-flag') !== '1') return null;
+            const m = document.cookie.match(/(?:^|; )ca_login=(\d+)/);
+            const ssFlag = sessionStorage.getItem('ca-login-flag') === '1';
             const lsFlag = localStorage.getItem('ca-login-flag') === '1';
-            const tokenAtLogin = sessionStorage.getItem('ca-token-after-login') === '1';
-            if (!lsFlag) return 'المتصفح مسح بيانات الموقع المحفوظة بعد ما سجّلت دخول (مش اللعبة اللي عملت كده). غالبًا إعداد أو إضافة في كروم بتمسح بيانات الموقع عند التحديث.';
-            if (!tokenAtLogin) return 'المتصفح ما حفظش جلسة الدخول أصلًا بعد التسجيل.';
-            return 'بيانات الموقع موجودة لكن جلسة الدخول اتشالت أو اترفضت.';
+            const hasToken = Object.keys(localStorage).some((k) => k.startsWith('sb-') && k.endsWith('-auth-token'));
+            if (!m && !ssFlag && !lsFlag) return null;
+            const mins = m ? Math.max(0, Math.round((Date.now() - Number(m[1])) / 60000)) : null;
+            const yn = (v: boolean) => (v ? 'موجود' : 'اتمسح');
+            return `سجّلتِ دخول قبل ${mins === null ? 'شوية' : mins + ' دقيقة'} وبعدين رجعتِ لشاشة الدخول من غير ما تدوسي خروج. حالة المتصفح: الكوكي ${yn(!!m)} · التخزين المحلي ${yn(lsFlag)} · تخزين التبويب ${yn(ssFlag)} · توكن الدخول ${yn(hasToken)}.`;
         } catch {
             return null;
         }
@@ -100,6 +102,7 @@ export function EntryScreen({ onEnter }: { onEnter: () => void }) {
                     sessionStorage.setItem('ca-login-flag', '1');
                     const hasToken = Object.keys(localStorage).some((k) => k.startsWith('sb-') && k.endsWith('-auth-token'));
                     sessionStorage.setItem('ca-token-after-login', hasToken ? '1' : '0');
+                    document.cookie = `ca_login=${Date.now()}; max-age=86400; path=/; SameSite=Lax`;
                 } catch { /* التخزين مش متاح */ }
                 enter();
             } else {
