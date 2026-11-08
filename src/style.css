@@ -373,23 +373,24 @@ html, body, #root { margin: 0; min-height: 100%; }
 }
 
 /* ---------- تحكم الصوت ---------- */
-.top-strip { position: relative; min-height: 49px; align-items: center; padding-left: 60px; }
-.top-strip .audio-control { position: absolute; left: 0; top: -5px; display: inline-flex; }
+.header-side { display: flex; align-items: center; gap: 8px; }
+.audio-control { display: inline-flex; }
 .audio-toggle {
-    width: 48px; height: 48px; min-height: 48px; padding: 2px;
+    width: 38px; height: 38px; min-height: 38px; padding: 2px;
     display: grid; place-items: center; overflow: hidden; border-radius: 50%;
     border: 1px solid #85653d; background: #0e1523;
-    box-shadow: inset 0 0 0 3px #101726, 0 3px 12px #0004;
+    box-shadow: inset 0 0 0 2px #101726, 0 2px 8px #0004;
 }
-.gramophone-art { width: 40px; height: 40px; object-fit: contain; border-radius: 50%; transition: filter .2s, opacity .2s; }
+.gramophone-art { width: 32px; height: 32px; object-fit: contain; border-radius: 50%; transition: filter .2s, opacity .2s; }
 .audio-toggle:not(.is-on) .gramophone-art { filter: grayscale(.8); opacity: .6; }
 .audio-toggle:focus-visible { outline: 2px solid var(--nvr-gold); outline-offset: 3px; }
-@media (max-width: 600px) {
-    .top-strip { padding-left: 56px; }
-    .top-strip .audio-control { top: 0; }
-    .audio-toggle { width: 46px; height: 46px; min-height: 46px; }
-    .gramophone-art { width: 38px; height: 38px; }
-}
+
+/* ---------- حقوق الموسيقى ---------- */
+.music-credit summary { cursor: pointer; list-style: none; color: var(--nvr-muted); text-decoration: underline dotted; }
+.music-credit summary::-webkit-details-marker { display: none; }
+.music-credit summary:hover { color: var(--nvr-gold); }
+.music-credit-body { margin-top: 6px; font-size: 11px; direction: ltr; text-align: left; }
+.music-credit-body .source-link { font-size: 11px; }
 
 /* ---------- نظام الحركة ---------- */
 @keyframes fade-down { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
