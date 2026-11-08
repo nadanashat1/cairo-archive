@@ -7,15 +7,30 @@ import type { CaseData } from '../game/cases';
 import { formatClock } from '../game/engine';
 import { toArabicNumeral } from './ArchiveScreen';
 
-export function WinScreen({ caseData, remainingMs, wrongAccusations, cluesUsed, totalClues, onReplay, onArchive }: {
+// جمل تشجيع مختلفة لكل قضية — عامية مصرية، من غير شخصية رئيس أو راوي.
+const WIN_ENCOURAGEMENT: Record<string, string> = {
+    'hanem-bracelet': 'عاش يا حضرة المحقق، أول ملف يتقفل بإيدك!',
+    'poison-tea': 'شاي مسموم وقضية أدهى — عينك ما فاتهاش حاجة!',
+    'locked-office': 'مكتب مقفول وسر انفتح على إيدك، برافو عليك!',
+    'alex-train': 'القطار وقف على كلمة منك، قفلت ملف تقيل!',
+    'nile-casino': 'عاش يا حضرة المحقق، قفلت ملف تقيل!',
+    'pasha-painting': 'اللوحة اختفت بس الحقيقة ظهرت — ذكاءك أجدع من أي خزنة!',
+    'opera-jewels': 'تحت الأنوار وقدام الكل، لقطتها يا معلم!',
+    'royal-hotel': 'فندق مليان أسرار، وإنت اللي قفلت أتقل ملف فيه!',
+    'qena-boat': 'آخر مركب ما فاتكش — قفلتها على المرسى!',
+};
+
+export function WinScreen({ caseData, remainingMs, wrongAccusations, cluesUsed, totalClues, rankNotice, onReplay, onArchive }: {
     caseData: CaseData;
     remainingMs: number;
     wrongAccusations: number;
     cluesUsed: number;
     totalClues: number;
+    rankNotice?: string | null;
     onReplay: () => void;
     onArchive: () => void;
 }) {
+    const encouragement = WIN_ENCOURAGEMENT[caseData.id] ?? 'ملف جديد اتقفل باسمك يا محقق!';
     const culprit = caseData.suspects.find((s) => s.id === caseData.culpritId)!;
     const culpritLabel = caseData.culpritRoleLabel ?? 'الجاني الحقيقي';
     const winHeadline = caseData.winHeadline ?? 'مبروك يا محقق! كشفت الجاني قبل فوات الأوان ⚖️';
@@ -43,6 +58,10 @@ export function WinScreen({ caseData, remainingMs, wrongAccusations, cluesUsed, 
                     <small>{registerLine}</small>
                 </span>
                 <h1 className="display-title anim-fade-up">{winHeadline}</h1>
+                <p className="win-flair anim-fade-up">{encouragement}</p>
+                {rankNotice && (
+                    <p className="win-flair rank-notice anim-fade-up">🎖️ {rankNotice}</p>
+                )}
                 {stars === 3 && (
                     <p className="win-flair anim-fade-up">🏆 حليتها من غير ما تفتح آخر ظرف — محقق محصلش بامتياز.</p>
                 )}
