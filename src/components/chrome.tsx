@@ -85,7 +85,6 @@ export function GameHeader({ activeTab, caseTitle, onNavigate }: { activeTab: 'c
                 <button type="button" className={`nav-tab ${activeTab === 'records' ? 'is-active' : ''}`} onClick={() => onNavigate('records')}>سجل الإدانات</button>
             </nav>
             <div className="header-side">
-                <span className="chip chip-gold header-player" title="المحقق الحالي">🕵️ {displayName}</span>
                 <button type="button" className="chip chip-button" onClick={() => void signOut()} title="تسجيل الخروج">
                     🚪 خروج
                 </button>
