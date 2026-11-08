@@ -97,9 +97,7 @@ export function GameFooter() {
     return (
         <footer className="game-footer anim-fade-up">
             <span className="creator-credit">صُنعت بواسطة <b className="gold-text">ندى نشأت</b> 🤍</span>
-            <span>نظام الأرشيف: <b className="ok-dot">متصل</b></span>
             <span>دفتر أحوال الجنايات · القاهرة الخديوية ١٩٥٢ 📻</span>
-            <span>حالة الاتصال: خط مشفر ومؤمن — جميع السجلات سرية ومحمية رسميًا</span>
             <span className="music-credit">
                 الموسيقى: Mysterioso March — Kevin MacLeod (incompetech.com) ·{' '}
                 <a className="source-link" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">
