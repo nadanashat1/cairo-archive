@@ -98,7 +98,6 @@ function RecordsScreen({ onArchive }: { onArchive: () => void }) {
             ) : (
                 <p className="records-empty anim-fade-up">لسه مفيش إدانات مسجلة. اقفل أول قضية وهتلاقيها هنا.</p>
             )}
-            <button type="button" className="btn-dark" onClick={onArchive}>📋 العودة لأرشيف القضايا</button>
         </main>
     );
 }
@@ -176,5 +175,4 @@ function AppInner() {
 }
 
 export { clearSavedRound };
-
 
