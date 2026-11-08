@@ -40,8 +40,38 @@ import photoRashad from '../photos/2-22-suspect-rashad.jpg';
 import photoToto from '../photos/3-23-suspect-toto.jpg';
 import photoAbdo from '../photos/4-24-suspect-abdo.jpg';
 import photoMedhat from '../photos/5-25-suspect-medhat.jpg';
+import photoSawsanOpera from '../photos/7-36-suspect-sawsan-opera.jpg';
+import photoKarima from '../photos/8-37-suspect-karima.jpg';
+import photoFahmy from '../photos/9-38-suspect-fahmy.jpg';
+import photoRaafat from '../photos/10-39-suspect-raafat.jpg';
+import photoHoda from '../photos/11-40-suspect-hoda.jpg';
+import photoMediha from '../photos/12-26-suspect-mediha.jpg';
+import photoGalal from '../photos/13-27-suspect-galal.jpg';
+import photoSamir from '../photos/14-28-suspect-samir.jpg';
+import photoRadwan from '../photos/15-29-suspect-radwan.jpg';
+import photoNagy from '../photos/16-30-suspect-nagy.jpg';
+import photoTahir from '../photos/17-31-suspect-tahir.jpg';
+import photoZeinab from '../photos/18-32-suspect-zeinab.jpg';
+import photoAbedQena from '../photos/19-33-suspect-abed-qena.jpg';
+import photoMabrouk from '../photos/20-34-suspect-mabrouk.jpg';
+import photoFarag from '../photos/21-35-suspect-farag.jpg';
 
 const PHOTOS: Record<string, string> = {
+    sawsanOpera: photoSawsanOpera,
+    karima: photoKarima,
+    fahmy: photoFahmy,
+    raafat: photoRaafat,
+    hoda: photoHoda,
+    mediha: photoMediha,
+    galal: photoGalal,
+    samir: photoSamir,
+    radwan: photoRadwan,
+    nagy: photoNagy,
+    tahir: photoTahir,
+    zeinab: photoZeinab,
+    abedQena: photoAbedQena,
+    mabrouk: photoMabrouk,
+    farag: photoFarag,
     sulaiman: photoSulaiman,
     zanouba: photoZanouba,
     farid: photoFarid,
