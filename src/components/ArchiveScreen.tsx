@@ -23,7 +23,7 @@ const CASE_ART: Record<number, { src: string; alt: string }> = {
     5: { src: caseCasino, alt: 'ترابيزة كازينو قدام نيل الليل — جو قضية جريمة كازينو النيل' },
     6: { src: casePainting, alt: 'إطار لوحة دهب فاضي على حيطة قصر — جو قضية اختفاء لوحة الباشا' },
     7: { src: caseOpera, alt: 'علبة جواهر مخمل فاضية قدام الأوبرا — جو قضية سرقة جواهر أوبرا الخديوي' },
-    8: { src: caseHotel, alt: 'شنطة مفتوحة فاضية في بهو فندق فخم — جو قضية جريمة فندق شبرد' },
+    8: { src: caseHotel, alt: 'شنطة مفتوحة فاضية في بهو فندق فخم — جو قضية جريمة فندق النيل' },
 };
 
 export function ArchiveScreen({ onPlay }: { onPlay: (caseId: string) => void }) {
