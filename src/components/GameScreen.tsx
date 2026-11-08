@@ -1,5 +1,6 @@
 // ============================================================================
-// شاشة اللعب — أول دليل فوري والباقي في أظرف مختومة بتتفتح عند الطلب، الاستبعاد والاتهام بإيد اللاعب.
+// شاشة اللعب — أول دليل فوري، وكل ظرف بعده بيتجهز في المعمل بعد فاصل ثابت، يظهر مختوم
+// ويفضل مقفول لحد ما اللاعب يفتحه بإيده. الاستبعاد والاتهام بإيد اللاعب.
 // ============================================================================
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -130,7 +131,7 @@ export function GameScreen({ caseData, engine, onExit }: { caseData: CaseData; e
                 <section className="start-banner anim-pop" aria-label="بدء التحقيق">
                     <div className="start-banner-text">
                         <h2>🗂️ اقرأ ملف القضية وكروت المشتبه فيهم براحتك</h2>
-                        <p>مفيش عد تنازلي دلوقتي. لما تكون جاهز، دوس «ابدأ التحقيق» — الوقت هيبدأ وأول دليل هيظهر فورًا، وباقي الأدلة في أظرف مختومة تفتحها لما تحس إن اللي معاك مش كفاية. كل ما تفتح أظرف أقل درجة استدلالك تعلا، ولو حليتها قبل آخر ظرف ومن غير ولا اتهام غلط تستاهل لقب «محقق محصلش» 🏆.</p>
+                        <p>مفيش عد تنازلي دلوقتي. لما تكون جاهز، دوس «ابدأ التحقيق» — الوقت هيبدأ وأول دليل هيظهر فورًا، وباقي الأدلة المعمل الجنائي بيجهزها ورا بعض، وكل ظرف لما يوصل بيفضل مختوم لحد ما تفتحه لما تحس إن اللي معاك مش كفاية. كل ما تفتح أظرف أقل درجة استدلالك تعلا، ولو حليتها قبل آخر ظرف ومن غير ولا اتهام غلط تستاهل لقب «محقق محصلش» 🏆.</p>
                     </div>
                     <button type="button" className="btn-amber btn-start" onClick={() => engine.start()}>
                         🕵️ ابدأ التحقيق
@@ -153,21 +154,30 @@ export function GameScreen({ caseData, engine, onExit }: { caseData: CaseData; e
                     </div>
                     {reading && (
                         <div className="next-clue anim-fade-up" aria-live="polite">
-                            <span>🔒 الأدلة مقفولة لحد ما يبدأ التحقيق — أول دليل هيظهر فور الضغط على «ابدأ التحقيق»، والباقي في أظرف مختومة تفتحها وقت ما تحتاجها.</span>
+                            <span>🔒 الأدلة مقفولة لحد ما يبدأ التحقيق — أول دليل هيظهر فور الضغط على «ابدأ التحقيق»، والباقي بيتجهز بالدور في المعمل الجنائي ويوصلك في أظرف مختومة تفتحها وقت ما تحتاجها.</span>
                             <span className="next-clue-flavor">🕰️ خد وقتك في القراءة، مفيش وقت بيعدي دلوقتي.</span>
                         </div>
                     )}
                     {visibleClues.map((clue, i) => (
                         <ClueCard key={clue.id} clue={clue} isNew={i === revealedCount - 1 && revealedCount > 0} />
                     ))}
-                    {!reading && envelopesRemaining > 0 && (
+                    {!reading && engine.prepRemainingMs !== null && (
+                        <div className="next-clue anim-fade-up" aria-live="polite">
+                            <span>الظرف اللي بعده بيوصل خلال <b className="gold-text">{formatClock(engine.prepRemainingMs)}</b></span>
+                            <div className="bar bar-gold">
+                                <i style={{ width: `${Math.min(100, 100 - (engine.prepRemainingMs / engine.prepTotalMs) * 100)}%` }} />
+                            </div>
+                            <span className="next-clue-flavor">🔬 المعمل الجنائي بيحلل البصمات…</span>
+                        </div>
+                    )}
+                    {!reading && envelopesRemaining > 0 && engine.envelopeReady && (
                         <div className="envelope-card anim-fade-up" aria-live="polite">
                             <div className="envelope-visual">
                                 <span className="envelope-icon" aria-hidden>✉️</span>
                                 <span className="envelope-title">ظرف مختوم من قسم الأدلة الجنائية</span>
                                 <span className="envelope-seal" aria-hidden>★</span>
                             </div>
-                            <span className="envelope-hint">الأدلة اللي معاك مش كفاية؟ افتح الظرف اللي بعده — التايمر شغال، فاختار وقتك بذكاء.</span>
+                            <span className="envelope-hint">الظرف وصل من المعمل — الأدلة اللي معاك مش كفاية؟ افتحه لما تكون محتاجه، والتايمر شغال، فاختار وقتك بذكاء.</span>
                             <div className="envelope-meta">
                                 <button type="button" className="btn-amber envelope-open" onClick={() => engine.openClue()}>
                                     🔓 افتح الظرف
