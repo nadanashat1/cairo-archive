@@ -5,7 +5,7 @@
 // ============================================================================
 
 import React, { useEffect, useRef, useState } from 'react';
-import { getCase, CASE_HANEM_BRACELET, ARCHIVE_SLOTS, type CaseData } from './game/cases';
+import { getCase, ARCHIVE_SLOTS, type CaseData } from './game/cases';
 import { rankInfo, type RankInfo } from './game/ranks';
 import { useGameEngine, clearSavedRound } from './game/engine';
 import { AuthProvider, useAuth } from './game/auth';
@@ -98,7 +98,7 @@ export function App() {
 function AppInner() {
     const [screen, setScreen] = useState<Screen>('archive');
     const [activeCase, setActiveCase] = useState<CaseData | null>(null);
-    const { user, ready, recovery } = useAuth();
+    const { user, ready, recovery, isWon } = useAuth();
 
     // الموسيقى بتبدأ تلقائيًا مع فتح الموقع (ومع أول تفاعل لو المتصفح مانع)
     useEffect(() => { noirAudio.autoStart(); }, []);
@@ -133,8 +133,13 @@ function AppInner() {
                 onNavigate={(tab) => {
                     if (tab === 'archive') goArchive();
                     else if (tab === 'records') setScreen('records');
-                    else if (activeCase) setScreen('game');
-                    else { setActiveCase(getCase(CASE_HANEM_BRACELET.id)); setScreen('game'); }
+                    else {
+                        // شاشة القضية الحالية = القضية اللي عليها الدور: أول قضية لسه ما اتكسبتش بالترتيب.
+                        const due = ARCHIVE_SLOTS.find((slot) => slot.state === 'playable' && slot.caseId && !isWon(slot.caseId));
+                        if (screen === 'game' && activeCase) setScreen('game');
+                        else if (due && due.caseId) { setActiveCase(getCase(due.caseId)); setScreen('game'); }
+                        else goArchive(); // كل القضايا اتحلت: نفضل في الأرشيف
+                    }
                 }}
             />
             {screen === 'archive' && (
@@ -150,4 +155,5 @@ function AppInner() {
 }
 
 export { clearSavedRound };
+
 
