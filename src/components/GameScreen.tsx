@@ -393,13 +393,14 @@ function SuspectCard(props: {
     onSelect: () => void;
 }) {
     const { suspect, index, excluded, selected, disabled = false } = props;
+    const [dossierOpen, setDossierOpen] = useState(false);
     return (
         <article
             className={`suspect-card anim-rise ${excluded ? 'is-excluded' : ''} ${selected ? 'is-selected' : ''}`}
             style={{ animationDelay: `${index * 80}ms` }}
         >
             <div className="suspect-card-top">
-                <span className="suspect-num">#{toArabicNumeral(index + 1)}</span>
+                <span className="suspect-num-wrap"><span className="suspect-num">#{toArabicNumeral(index + 1)}</span><button type="button" className="dossier-open" onClick={() => setDossierOpen(true)} aria-label={`افتح دوسيه ${suspect.name}`} title="دوسيه المشتبه فيه">🗂</button></span>
                 {excluded ? (
                     <span className="chip chip-dark">خارج الشبهات</span>
                 ) : selected ? (
@@ -421,6 +422,7 @@ function SuspectCard(props: {
                 {suspect.facts.map((f, i) => <li key={i}>{f}</li>)}
             </ul>
             {excluded && <span className="stamp stamp-red stamp-anim suspect-stamp">مستبعدة ✓</span>}
+            {dossierOpen && <SuspectDossier suspect={suspect} number={index + 1} onClose={() => setDossierOpen(false)} />}
             <div className="suspect-actions">
                 {excluded ? (
                     <button type="button" className="btn-dark btn-block" onClick={props.onUndo} disabled={disabled}>↩️ تراجع عن الاستبعاد</button>
@@ -437,7 +439,102 @@ function SuspectCard(props: {
     );
 }
 
+function makeRidges(seed: number, kind: 'whorl' | 'loop'): string[] {
+    let s = seed * 9301 + 49297;
+    const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+    const ph = [0, 1, 2, 3].map(() => rnd() * 6.28);
+    const cx = 60, cy = 78;
+    const paths: string[] = [];
+    for (let k = 1; k <= 22; k++) {
+        const r = k * 2.9;
+        let d = '';
+        for (let i = 0; i <= 360; i += 4) {
+            const a = (i * Math.PI) / 180;
+            const wob = 1 + 0.05 * Math.sin(3 * a + ph[0]) + 0.03 * Math.sin(5 * a + ph[1]);
+            const rx = r * 0.82 * wob;
+            const ry = r * 1.12 * wob;
+            let x: number;
+            let y: number;
+            if (kind === 'loop') {
+                x = cx + rx * Math.sin(a);
+                y = cy - ry * Math.cos(a);
+                if (Math.cos(a) < 0) y = cy + ry * 0.55 * -Math.cos(a) * 1.6 + k * 0.4;
+            } else {
+                x = cx + rx * Math.sin(a) + k * 0.15 * Math.sin(a * 2 + ph[2]);
+                y = cy - ry * Math.cos(a);
+            }
+            d += `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)} `;
+        }
+        paths.push(d);
+    }
+    return paths;
+}
 
+function Fingerprint(props: { seed: number; kind: 'whorl' | 'loop' }) {
+    const { seed, kind } = props;
+    const ridges = React.useMemo(() => makeRidges(seed, kind), [seed, kind]);
+    const id = `fp${seed}${kind}`;
+    return (
+        <svg width="120" height="150" viewBox="0 0 120 150" aria-hidden>
+            <defs>
+                <clipPath id={`c-${id}`}><ellipse cx="60" cy="76" rx="52" ry="68" /></clipPath>
+                <filter id={`n-${id}`} x="0" y="0" width="100%" height="100%">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed={seed} result="t" />
+                    <feColorMatrix in="t" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.3 1.55" result="m" />
+                    <feComposite in="SourceGraphic" in2="m" operator="in" />
+                    <feGaussianBlur stdDeviation="0.35" />
+                </filter>
+            </defs>
+            <g clipPath={`url(#c-${id})`} filter={`url(#n-${id})`} fill="none" stroke="#1c1712" strokeWidth="1.7" opacity=".82" strokeLinecap="round">
+                {ridges.map((d, i) => <path key={i} d={d} />)}
+            </g>
+        </svg>
+    );
+}
 
-
-
+function SuspectDossier(props: { suspect: Suspect; number: number; onClose: () => void }) {
+    const { suspect, number, onClose } = props;
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [onClose]);
+    const seed = suspect.name.split('').reduce((a, c) => a + c.charCodeAt(0), 7) % 997;
+    return createPortal(
+        <div className="dossier-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label={`دوسيه ${suspect.name}`}>
+            <div className="dossier-folder" onClick={(e) => e.stopPropagation()}>
+                <div className="dossier-back" />
+                <div className="dossier-tab">ملف سري</div>
+                <div className="dossier-sheet">
+                    <div className="dossier-clip" aria-hidden />
+                    <button type="button" className="dossier-close" onClick={onClose} aria-label="إغلاق الدوسيه">✕</button>
+                    <div className="dossier-head">
+                        <div className="dossier-title">
+                            <small>أرشيف القاهرة · دوسيه مشتبه فيه رقم {toArabicNumeral(number)}#</small>
+                            <h2>{suspect.name}</h2>
+                            <span>{suspect.role} · {suspect.age}</span>
+                        </div>
+                        <div className="dossier-stamp">سرّي للغاية</div>
+                    </div>
+                    <div className="dossier-body">
+                        <div className="dossier-photo">
+                            <div className="dossier-tape" />
+                            <div className="dossier-mat"><img src={PHOTOS[suspect.photo]} alt={`صورة توضيحية للمشتبه فيه ${suspect.name}`} /></div>
+                            <div className="dossier-photo-cap">{suspect.name}</div>
+                        </div>
+                        <div className="dossier-text">
+                            <h3>أقواله وملاحظات المحقق</h3>
+                            <ul>{suspect.facts.map((f, i) => <li key={i}>{f}</li>)}</ul>
+                            <div className="dossier-prints">
+                                <div className="dossier-print"><Fingerprint seed={seed} kind="whorl" /><span>بصمة الإبهام</span></div>
+                                <div className="dossier-print"><Fingerprint seed={seed + 5} kind="loop" /><span>بصمة السبابة</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="dossier-foot"><span>للتوثيق فقط - البصمات للزينة ومفيهاش أدلة جديدة</span><span>أرشيف القاهرة · ١٩٥٢</span></div>
+                </div>
+            </div>
+        </div>,
+        document.body,
+    );
+}
