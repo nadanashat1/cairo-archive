@@ -68,9 +68,13 @@ export function ArchiveScreen({ onPlay }: { onPlay: (caseId: string) => void }) 
                                     <img src={cover} alt="غلاف توضيحي لقضية أسورة الهانم" />
                                 );
                             })()}
-                            <span className={`chip ${openness[i] === 'open' ? 'chip-gold' : 'chip-dark'}`}>
-                                {openness[i] === 'open' ? '● الدور عليك' : '🔒 مقفلة'}
-                            </span>
+                            {slot.caseId && isWon(slot.caseId) ? (
+                                <span className="stamp-solved">تم الحل</span>
+                            ) : (
+                                <span className={`chip ${openness[i] === 'open' ? 'chip-gold' : 'chip-dark'}`}>
+                                    {openness[i] === 'open' ? '● الدور عليك' : '🔒 مقفلة'}
+                                </span>
+                            )}
                         </div>
                         <h2 className="case-card-title">قضية {toArabicNumeral(slot.number)}: {slot.title}</h2>
                         {openness[i] === 'open' ? (
@@ -93,6 +97,5 @@ export function toArabicNumeral(n: number): string {
     const digits = '٠١٢٣٤٥٦٧٨٩';
     return String(n).split('').map((d) => digits[Number(d)] ?? d).join('');
 }
-
 
 
