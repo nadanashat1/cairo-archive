@@ -1,9 +1,12 @@
 // ============================================================================
-// شاشة أرشيف القضايا — القضية الأولى متاحة، والباقي مقفل (محتواه لسه متكتبش).
+// شاشة أرشيف القضايا — القضايا بتتفتح بالدور: أول قضية متاحة، وكل قضية بعدها
+// بتتفتح بعد ما اللاعب يقفل (يكسب) اللي قبلها. القضية المقفولة بالفعل تفضل
+// متاحة لإعادة اللعب. واللي محتواه لسه متكتبش يفضل مقفول.
 // ============================================================================
 
 import React from 'react';
 import { ARCHIVE_SLOTS } from '../game/cases';
+import { useAuth } from '../game/auth';
 import cover from '../photos/case-cover.jpg';
 import caseTea from '../photos/1-case-2-tea.png';
 import caseOffice from '../photos/2-case-3-office.png';
@@ -24,6 +27,17 @@ const CASE_ART: Record<number, { src: string; alt: string }> = {
 };
 
 export function ArchiveScreen({ onPlay }: { onPlay: (caseId: string) => void }) {
+    const { isWon } = useAuth();
+    // القفل المتسلسل: القضية متاحة لو هي أول قضية ليها محتوى، أو اللاعب كسبها
+    // قبل كده (إعادة لعب)، أو كسب القضية اللي قبلها. مكسبهااش ومش اللي بعد
+    // مكسبه = مقفولة بالدور، حتى لو محتواها موجود.
+    let prevCaseId: string | null = null;
+    const openness = ARCHIVE_SLOTS.map((slot) => {
+        if (slot.state !== 'playable' || !slot.caseId) return 'content' as const;
+        const open = prevCaseId === null || isWon(slot.caseId) || isWon(prevCaseId);
+        prevCaseId = slot.caseId;
+        return open ? ('open' as const) : ('seq' as const);
+    });
     return (
         <main className="archive-screen screen-enter">
             <div className="archive-head anim-fade-up">
@@ -34,7 +48,7 @@ export function ArchiveScreen({ onPlay }: { onPlay: (caseId: string) => void }) 
                 {ARCHIVE_SLOTS.map((slot, i) => (
                     <article
                         key={slot.number}
-                        className={`case-card anim-rise ${slot.state === 'playable' ? 'is-playable' : 'is-locked'}`}
+                        className={`case-card anim-rise ${openness[i] === 'open' ? 'is-playable' : 'is-locked'}`}
                         style={{ animationDelay: `${i * 90}ms` }}
                     >
                         <div className="case-card-media">
@@ -46,15 +60,17 @@ export function ArchiveScreen({ onPlay }: { onPlay: (caseId: string) => void }) 
                                     <img src={cover} alt="غلاف توضيحي لقضية أسورة الهانم" />
                                 );
                             })()}
-                            <span className={`chip ${slot.state === 'playable' ? 'chip-gold' : 'chip-dark'}`}>
-                                {slot.state === 'playable' ? '● الدور عليك' : '🔒 مقفلة'}
+                            <span className={`chip ${openness[i] === 'open' ? 'chip-gold' : 'chip-dark'}`}>
+                                {openness[i] === 'open' ? '● الدور عليك' : '🔒 مقفلة'}
                             </span>
                         </div>
                         <h2 className="case-card-title">قضية {toArabicNumeral(slot.number)}: {slot.title}</h2>
-                        {slot.state === 'playable' ? (
+                        {openness[i] === 'open' ? (
                             <button type="button" className="btn-amber btn-block" onClick={() => onPlay(slot.caseId!)}>
                                 ابدأ التحقيق
                             </button>
+                        ) : openness[i] === 'seq' ? (
+                            <p className="case-card-note">🔒 اقفل القضية اللي قبلها الأول — القضايا بتتفتح بالدور.</p>
                         ) : (
                             <p className="case-card-note">المحتوى لسه بيتكتب — هتتفتح بالترتيب بعد القضية السابقة.</p>
                         )}
@@ -69,4 +85,5 @@ export function toArabicNumeral(n: number): string {
     const digits = '٠١٢٣٤٥٦٧٨٩';
     return String(n).split('').map((d) => digits[Number(d)] ?? d).join('');
 }
+
 
