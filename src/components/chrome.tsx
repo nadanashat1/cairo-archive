@@ -103,7 +103,7 @@ export function AudioControl() {
 }
 
 export function GameHeader({ activeTab, caseTitle, onNavigate }: { activeTab: 'case' | 'archive' | 'records'; caseTitle?: string; onNavigate: (tab: 'case' | 'archive' | 'records') => void }) {
-    const { displayName, signOut, getRecords } = useAuth();
+    const { displayName, signOut, getRecords, saveError } = useAuth();
     const rank = rankInfo(getRecords());
     const rankProgress = rankProgressLine(rank, toArabicNumeral);
     return (
@@ -119,6 +119,11 @@ export function GameHeader({ activeTab, caseTitle, onNavigate }: { activeTab: 'c
                     <div className="header-sub rank-line" title="رتبتك في الأرشيف والتقدم نحو الرتبة الجاية">
                         🎖️ {rank.name}{rankProgress ? ` · ${rankProgress}` : ' · أعلى رتبة في الأرشيف'}
                     </div>
+                    {saveError && (
+                        <div className="header-sub save-error-line" role="alert">
+                            ⚠ حصلت مشكلة في حفظ سجلّك على النظام — هنحاول تاني مع أول نتيجة جاية. لو الرسالة فضلت ظاهرة، سجّل الخروج والدخول من تاني.
+                        </div>
+                    )}
                 </div>
             </div>
             <nav className="header-nav" aria-label="التنقل الرئيسي">
