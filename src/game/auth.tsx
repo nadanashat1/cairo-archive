@@ -168,6 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const signOut = useCallback(async () => {
+        try { sessionStorage.removeItem('ca-login-flag'); localStorage.removeItem('ca-login-flag'); } catch { /* ignore */ }
         await supabase.auth.signOut();
         setUser(null);
         setProfile(null);
@@ -213,4 +214,5 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return <AuthCtx.Provider value={api}>{children}</AuthCtx.Provider>;
 }
+
 
