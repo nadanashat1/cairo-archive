@@ -11,7 +11,6 @@ import { toArabicNumeral } from './ArchiveScreen';
 export function TopStrip() {
     return (
         <div className="top-strip anim-fade-down">
-            <AudioControl />
             <span>مباحث القاهرة - ١٩٥٢ · وصول مقيد لأفراد التحقيق الجنائي</span>
             <span className="top-strip-warning">⚠ محظور التداول العام - سرية مطلقة</span>
         </div>
@@ -85,6 +84,7 @@ export function GameHeader({ activeTab, caseTitle, onNavigate }: { activeTab: 'c
                 <button type="button" className={`nav-tab ${activeTab === 'records' ? 'is-active' : ''}`} onClick={() => onNavigate('records')}>سجل الإدانات</button>
             </nav>
             <div className="header-side">
+                <AudioControl />
                 <button type="button" className="chip chip-button" onClick={() => void signOut()} title="تسجيل الخروج">
                     🚪 خروج
                 </button>
@@ -98,12 +98,15 @@ export function GameFooter() {
         <footer className="game-footer anim-fade-up">
             <span className="creator-credit">صُنعت بواسطة <b className="gold-text">ندى نشأت</b> 🤍</span>
             <span>دفتر أحوال الجنايات · القاهرة الخديوية ١٩٥٢ 📻</span>
-            <span className="music-credit">
-                الموسيقى: Mysterioso March — Kevin MacLeod (incompetech.com) ·{' '}
-                <a className="source-link" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">
-                    Licensed under Creative Commons: By Attribution 4.0
-                </a>
-            </span>
+            <details className="music-credit">
+                <summary>حقوق الموسيقى</summary>
+                <div className="music-credit-body">
+                    Mysterioso March — Kevin MacLeod (<a className="source-link" href="https://incompetech.com" target="_blank" rel="noreferrer">incompetech.com</a>) ·{' '}
+                    <a className="source-link" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">
+                        Licensed under Creative Commons: By Attribution 4.0
+                    </a>
+                </div>
+            </details>
         </footer>
     );
 }
