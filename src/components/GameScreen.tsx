@@ -147,7 +147,7 @@ export function GameScreen({ caseData, engine, onExit, preview = false }: { case
     useEffect(() => {
         const el = document.querySelector('.timer-card');
         if (!el || typeof IntersectionObserver === 'undefined') return;
-        const io = new IntersectionObserver(([entry]) => setMainTimerVisible(entry.isIntersecting));
+        const io = new IntersectionObserver(([entry]) => setMainTimerVisible(entry.isIntersecting || entry.boundingClientRect.top >= 0));
         io.observe(el);
         return () => io.disconnect();
     }, [reading]);
