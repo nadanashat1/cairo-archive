@@ -303,10 +303,6 @@ export function GameScreen({ caseData, engine, onExit, preview = false }: { case
 
             {/* شريط الاتهام */}
             <section className="accuse-bar anim-fade-up" style={{ animationDelay: '120ms' }}>
-                <div className="accuse-side">
-                    <button type="button" className="chip chip-button" onClick={() => setNotesOpen((v) => !v)}>📝 دفتر ملاحظاتي</button>
-                    <button type="button" className="chip chip-button" onClick={onExit}>📋 العودة لأرشيف القضايا</button>
-                </div>
                 <button
                     type="button"
                     className="btn-amber btn-accuse"
@@ -318,7 +314,20 @@ export function GameScreen({ caseData, engine, onExit, preview = false }: { case
                 <p className="accuse-note">تنبيه المحقق: توجيه اتهام خاطئ يخصم {toArabicNumeral(DEFAULT_SETTINGS.wrongAccusePenaltySeconds)} ثانية فورًا — الخطأ في تحديد الجاني بيكلفك وقتًا وقد يضيّع القضية.</p>
             </section>
 
-            {notesOpen && (
+            {!reading && (
+                <button
+                    type="button"
+                    className={`notes-fab ${notesOpen ? 'is-open' : ''}`}
+                    onClick={() => setNotesOpen((v) => !v)}
+                    aria-label="دفتر ملاحظاتي"
+                    aria-expanded={notesOpen}
+                    title="دفتر ملاحظاتي"
+                >
+                    📝
+                </button>
+            )}
+
+            {notesOpen && !reading && (
                 <section className="notes-drawer anim-pop" aria-label="دفتر الملاحظات">
                     <h3>📝 دفتر ملاحظاتي</h3>
                     <textarea
