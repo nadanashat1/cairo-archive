@@ -556,9 +556,11 @@ html, body, #root { margin: 0; min-height: 100%; }
 .dossier-text ul{margin:0 0 18px;padding:0;list-style:none}
 .dossier-text li{font-size:21px;line-height:1.75;font-weight:500;padding-right:26px;position:relative;margin-bottom:6px}
 .dossier-text li:before{content:"◆";position:absolute;right:0;top:2px;color:#7d1f2a;font-size:13px}
-.dossier-prints{display:flex;gap:18px;margin-top:6px}
-.dossier-print{width:128px;padding:10px;background:#e6dcc5;border:1px solid #8a6b3a88;text-align:center;font-size:12px;color:#6b5530}
-.dossier-print svg{display:block;margin:0 auto 4px;mix-blend-mode:multiply;width:96px;height:auto}
+.dossier-prints{display:flex;gap:38px;margin-top:18px}
+.dossier-print{padding:0;text-align:center;font-size:12px;color:#6b5530}
+.dossier-print svg{display:block;margin:0 auto 2px;mix-blend-mode:multiply;width:104px;height:auto}
+.dossier-print:first-child svg{transform:rotate(-7deg)}
+.dossier-print:last-child svg{transform:rotate(6deg)}
 .dossier-foot{margin-top:24px;display:flex;justify-content:space-between;font-size:12px;color:#7b6035;gap:10px}
 @media (max-width:680px){
   .dossier-sheet{margin:26px 12px;padding:30px 18px 20px}
