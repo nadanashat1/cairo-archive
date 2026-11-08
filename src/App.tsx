@@ -19,6 +19,22 @@ import { WinScreen, LossScreen } from './components/ResultScreens';
 
 type Screen = 'archive' | 'game' | 'records';
 
+// معاينة قصة قضية لصاحبة الحساب بس (بدون بدء تحقيق ولا أي حفظ في السجل).
+const PREVIEW_OWNER_EMAIL = 'nadanashat15@gmail.com';
+const PREVIEW_CASE_IDS = ['qena-boat'];
+
+function PreviewFlow({ caseData, onArchive }: { caseData: CaseData; onArchive: () => void }) {
+    const engine = useGameEngine(caseData);
+    return (
+        <>
+            <div className="preview-banner" role="status" style={{ margin: '12px auto', maxWidth: 900, textAlign: 'center', padding: '10px 14px', border: '1px solid #c9a24b', borderRadius: 8, color: '#f0c969' }}>
+                👁️ معاينة القضية فقط — مش محاولة، ومفيش نتيجة هتتسجل، ومفيش أي تأثير على ترتيبك أو رتبتك.
+            </div>
+            <GameScreen caseData={caseData} engine={engine} onExit={onArchive} preview />
+        </>
+    );
+}
+
 function GameFlow({ caseData, onArchive }: { caseData: CaseData; onArchive: () => void }) {
     const engine = useGameEngine(caseData);
     const s = engine.state;
@@ -99,6 +115,8 @@ function AppInner() {
     const [screen, setScreen] = useState<Screen>('archive');
     const [activeCase, setActiveCase] = useState<CaseData | null>(null);
     const { user, ready, recovery, isWon } = useAuth();
+    const previewId = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('preview') : null;
+    const previewCase = user && !recovery && user.email === PREVIEW_OWNER_EMAIL && previewId && PREVIEW_CASE_IDS.includes(previewId) ? getCase(previewId) : null;
 
     // الموسيقى بتبدأ تلقائيًا مع فتح الموقع (ومع أول تفاعل لو المتصفح مانع)
     useEffect(() => { noirAudio.autoStart(); }, []);
@@ -142,7 +160,10 @@ function AppInner() {
                     }
                 }}
             />
-            {screen === 'archive' && (
+            {previewCase && screen === 'archive' && (
+                <PreviewFlow caseData={previewCase} onArchive={() => { window.history.replaceState(null, '', window.location.pathname); setScreen('records'); goArchive(); }} />
+            )}
+            {!previewCase && screen === 'archive' && (
                 <ArchiveScreen onPlay={(caseId) => { setActiveCase(getCase(caseId)); setScreen('game'); }} />
             )}
             {screen === 'records' && <RecordsScreen onArchive={goArchive} />}
