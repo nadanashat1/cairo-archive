@@ -33,6 +33,9 @@ export interface AuthApi {
     isWon: (caseId: string) => boolean;
     // كل سجلات القضايا المنشورة (فوز + تقييم أول محاولة) — لنظام الرتب.
     getRecords: () => Record<string, CaseRecord>;
+    // true لما آخر محاولة حفظ على النظام تفشل بعد كل إعادات المحاولة —
+    // بيظهر تنبيه في الواجهة بدل ما السجل يضيع في صمت.
+    saveError: boolean;
 }
 
 const AuthCtx = createContext<AuthApi | null>(null);
@@ -59,6 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [profile, setProfile] = useState<PlayerProfile | null>(null);
     const [ready, setReady] = useState(false);
     const [recovery, setRecovery] = useState(false);
+    const [saveError, setSaveError] = useState(false);
     const profileRef = useRef<PlayerProfile | null>(null);
     profileRef.current = profile;
 
@@ -111,8 +115,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setProfile((p) => (p ? { ...p, record } : p));
             // لازم await: باني الاستعلام في supabase-js مبيبعتش الطلب غير لما يتعمله await —
             // من غيره الفوز كان بيتسجل في الواجهة بس ومبيتحفظش على النظام.
+            // ولما الحفظ يفشل (شبكة، جلسة مش صالحة، أي خطأ) بنعيد المحاولة تلقائيًا
+            // مرتين، ولو فشلت كل المحاولات يظهر تنبيه واضح في الواجهة بدل ما
+            // السجل يضيع في صمت من غير ما اللاعب يعرف.
             void (async () => {
-                await supabase.from('player_progress').upsert({ user_id: user.id, display_name: name, record });
+                for (let attempt = 0; attempt < 3; attempt++) {
+                    if (attempt > 0) await new Promise((r) => setTimeout(r, 1500 * attempt));
+                    const { error } = await supabase.from('player_progress').upsert({ user_id: user.id, display_name: name, record });
+                    if (!error) {
+                        setSaveError(false);
+                        return;
+                    }
+                }
+                setSaveError(true);
             })();
         },
         [user],
@@ -157,6 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setProfile(null);
         setRecovery(false);
+        setSaveError(false);
     }, []);
 
     const requestPasswordReset = useCallback(async (email: string) => {
@@ -192,6 +208,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updatePassword,
         isWon,
         getRecords,
+        saveError,
     };
 
     return <AuthCtx.Provider value={api}>{children}</AuthCtx.Provider>;
