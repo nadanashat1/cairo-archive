@@ -642,7 +642,7 @@ export const ARCHIVE_SLOTS: ArchiveSlot[] = [
     { number: 5, title: 'جريمة كازينو النيل', state: 'locked' },
     { number: 6, title: 'اختفاء لوحة الباشا', state: 'locked' },
     { number: 7, title: 'سرقة جواهر أوبرا الخديوي', state: 'locked' },
-    { number: 8, title: 'جريمة فندق شبرد', state: 'locked' },
+    { number: 8, title: 'جريمة فندق النيل', state: 'locked' },
 ];
 
 const CASES_BY_ID: Record<string, CaseData> = {
