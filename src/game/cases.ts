@@ -639,7 +639,6 @@ export const ARCHIVE_SLOTS: ArchiveSlot[] = [
     { number: 2, title: 'سم في فنجان الشاي', state: 'playable', caseId: CASE_POISON_TEA.id },
     { number: 3, title: 'جريمة في المكتب المقفول', state: 'playable', caseId: CASE_LOCKED_OFFICE.id },
     { number: 4, title: 'لغز قطار الإسكندرية', state: 'playable', caseId: CASE_ALEX_TRAIN.id },
-    { number: 4, title: 'لغز قطار الإسكندرية', state: 'locked' },
     { number: 5, title: 'جريمة كازينو النيل', state: 'locked' },
     { number: 6, title: 'اختفاء لوحة الباشا', state: 'locked' },
     { number: 7, title: 'سرقة جواهر أوبرا الخديوي', state: 'locked' },
