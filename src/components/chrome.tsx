@@ -2,7 +2,7 @@
 // هيكل الصفحات المشترك: الشريط العلوي، الهيدر، الفوتر، وتحكم الصوت.
 // ============================================================================
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { noirAudio } from '../game/audio';
 import { useAuth } from '../game/auth';
 import { rankInfo, rankProgressLine } from '../game/ranks';
@@ -19,38 +19,19 @@ export function TopStrip() {
 
 export function AudioControl() {
     const [playing, setPlaying] = useState(false);
-    const [open, setOpen] = useState(false);
-    const [muted, setMuted] = useState(false);
-    const [volume, setVolume] = useState(0.5);
-    const rootRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => () => noirAudio.stopMusic(), []);
 
-    // مزامنة شكل الزر مع حالة الموسيقى الفعلية (الموسيقى ممكن تبدأ تلقائيًا)
+    // Keep the icon in sync with the music, including autoplay.
     useEffect(() => {
-        const id = window.setInterval(() => {
-            setPlaying(noirAudio.isPlaying);
-            setMuted(noirAudio.isMuted);
-        }, 400);
+        const id = window.setInterval(() => setPlaying(noirAudio.isPlaying), 400);
         return () => window.clearInterval(id);
     }, []);
 
-    // لوحة الصوت بتتقفل لما اللاعب يدوس في أي حتة براها
-    useEffect(() => {
-        if (!open) return;
-        const onDown = (e: PointerEvent) => {
-            if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
-        };
-        document.addEventListener('pointerdown', onDown);
-        return () => document.removeEventListener('pointerdown', onDown);
-    }, [open]);
-
-    // الزر الرئيسي: تشغيل/إيقاف بس — من غير ما يفتح لوحة مستوى الصوت
     const toggle = () => {
         if (playing) {
             noirAudio.userStop();
             setPlaying(false);
-            setOpen(false);
         } else {
             noirAudio.startMusic();
             setPlaying(true);
@@ -58,46 +39,24 @@ export function AudioControl() {
     };
 
     return (
-        <div className="audio-control" ref={rootRef}>
-            <button type="button" className={`chip chip-button ${playing ? 'is-on' : ''}`} onClick={toggle} aria-pressed={playing}>
-                <span className={`eq ${playing ? 'eq-on' : ''}`}><i /><i /><i /></span>
-                موسيقى التحقيق 🎵
-            </button>
+        <div className="audio-control">
             <button
                 type="button"
-                className={`chip chip-button audio-gear ${open ? 'is-on' : ''}`}
-                onClick={() => setOpen((v) => !v)}
-                aria-expanded={open}
-                aria-label="مستوى الصوت والكتم"
-                title="مستوى الصوت والكتم"
+                className={`chip chip-button audio-toggle ${playing ? 'is-on' : ''}`}
+                onClick={toggle}
+                aria-pressed={playing}
+                aria-label={playing ? 'إيقاف الموسيقى' : 'تشغيل الموسيقى'}
+                title={playing ? 'إيقاف الموسيقى' : 'تشغيل الموسيقى'}
             >
-                🎚️
+                <svg className="gramophone-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                    <path d="M12.5 12 23 4.5v11l-10.5-3.8Z" />
+                    <ellipse cx="23.5" cy="10" rx="3.5" ry="5.8" />
+                    <path d="M12.5 12v5l-3.3 3.1" />
+                    <circle cx="8.5" cy="22.5" r="5.5" />
+                    <circle cx="8.5" cy="22.5" r="1.7" />
+                    <path d="M2.5 29h24M25 16v7" />
+                </svg>
             </button>
-            {open && (
-                <div className="audio-pop anim-pop" role="group" aria-label="تحكم الصوت">
-                    <button
-                        type="button"
-                        className="chip chip-button"
-                        onClick={() => { const m = !muted; noirAudio.setMuted(m); setMuted(m); }}
-                        aria-pressed={muted}
-                    >
-                        {muted ? '🔇 مكتوم' : '🔊 الصوت شغال'}
-                    </button>
-                    <input
-                        type="range"
-                        min={0}
-                        max={100}
-                        value={Math.round(volume * 100)}
-                        aria-label="درجة الصوت"
-                        onChange={(e) => {
-                            const v = Number(e.target.value) / 100;
-                            setVolume(v);
-                            noirAudio.setVolume(v);
-                            if (v > 0 && muted) { noirAudio.setMuted(false); setMuted(false); }
-                        }}
-                    />
-                </div>
-            )}
         </div>
     );
 }
@@ -158,5 +117,4 @@ export function GameFooter() {
         </footer>
     );
 }
-
 

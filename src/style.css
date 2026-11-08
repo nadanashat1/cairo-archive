@@ -356,20 +356,15 @@ html, body, #root { margin: 0; min-height: 100%; }
 }
 
 /* ---------- تحكم الصوت ---------- */
-.audio-control { position: relative; display: flex; align-items: center; gap: 6px; }
-.audio-gear { padding: 0 10px; }
-.audio-pop {
-    position: absolute; top: calc(100% + 8px); inset-inline-end: 0; z-index: 30;
-    background: var(--nvr-card); border: 1px solid var(--nvr-border); border-radius: 12px;
-    padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 210px;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, .5);
+.audio-control { display: flex; align-items: center; }
+.audio-toggle {
+    width: 42px; height: 42px; min-height: 42px; padding: 7px;
+    justify-content: center; border-radius: 10px;
 }
-.audio-pop input[type='range'] { width: 100%; accent-color: var(--nvr-amber); }
-.eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
-.eq i { width: 3px; height: 4px; background: currentColor; border-radius: 1px; }
-.eq-on i { animation: eq-bounce .9s ease-in-out infinite; }
-.eq-on i:nth-child(2) { animation-delay: .15s; }
-.eq-on i:nth-child(3) { animation-delay: .3s; }
+.gramophone-icon {
+    width: 26px; height: 26px; flex: none; overflow: visible;
+    stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+}
 
 /* ---------- نظام الحركة ---------- */
 @keyframes fade-down { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
