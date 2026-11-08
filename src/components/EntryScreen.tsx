@@ -35,6 +35,19 @@ function PasswordInput({ value, onChange, label, autoComplete }: { value: string
 export function EntryScreen({ onEnter }: { onEnter: () => void }) {
     const { signIn, signUp, signOut, recovery, requestPasswordReset, updatePassword } = useAuth();
     const [mode, setMode] = useState<'login' | 'signup'>('login');
+    // لو اللاعب كان مسجّل دخول في نفس التبويب وبعدين رجع لشاشة الدخول من غير ما يدوس خروج، نعرض السبب المحتمل.
+    const [logoutDiag] = useState<string | null>(() => {
+        try {
+            if (sessionStorage.getItem('ca-login-flag') !== '1') return null;
+            const lsFlag = localStorage.getItem('ca-login-flag') === '1';
+            const tokenAtLogin = sessionStorage.getItem('ca-token-after-login') === '1';
+            if (!lsFlag) return 'المتصفح مسح بيانات الموقع المحفوظة بعد ما سجّلت دخول (مش اللعبة اللي عملت كده). غالبًا إعداد أو إضافة في كروم بتمسح بيانات الموقع عند التحديث.';
+            if (!tokenAtLogin) return 'المتصفح ما حفظش جلسة الدخول أصلًا بعد التسجيل.';
+            return 'بيانات الموقع موجودة لكن جلسة الدخول اتشالت أو اترفضت.';
+        } catch {
+            return null;
+        }
+    });
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -81,6 +94,13 @@ export function EntryScreen({ onEnter }: { onEnter: () => void }) {
                     setError(err);
                     return;
                 }
+                // تشخيص بسيط: بنسجّل إن الدخول حصل ونتأكد إن المتصفح حافظ على التوكن (لو الصفحة اتحدّثت وطلبت دخول تاني هنعرف السبب).
+                try {
+                    localStorage.setItem('ca-login-flag', '1');
+                    sessionStorage.setItem('ca-login-flag', '1');
+                    const hasToken = Object.keys(localStorage).some((k) => k.startsWith('sb-') && k.endsWith('-auth-token'));
+                    sessionStorage.setItem('ca-token-after-login', hasToken ? '1' : '0');
+                } catch { /* التخزين مش متاح */ }
                 enter();
             } else {
                 const res = await signUp(name.trim(), mail, password);
@@ -200,6 +220,9 @@ export function EntryScreen({ onEnter }: { onEnter: () => void }) {
                     <span className="game-logo-line">أرشيف القاهرة:</span>
                     <span className="game-logo-gold">قضايا الليل</span>
                 </h1>
+                {logoutDiag && (
+                    <p role="status" style={{ maxWidth: 560, margin: '8px auto', textAlign: 'center', fontSize: 13, color: '#f0c969', border: '1px solid #c9a24b', borderRadius: 8, padding: '8px 12px' }}>{logoutDiag}</p>
+                )}
                 <p className="entry-tagline anim-fade-up" style={{ animationDelay: '120ms' }}>
                     منظومة قيد الجرائم وسجلات التحقيق الجنائي — تصريح دخول رسمي لضباط وقضاة التحقيق
                 </p>
