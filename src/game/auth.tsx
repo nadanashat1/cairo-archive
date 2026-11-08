@@ -10,11 +10,13 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { loadRecord, setRecordSink } from './engine';
+import { loadRecord, loadCaseRecord, mergeCaseRecord, setRecordSink } from './engine';
+import type { CaseFirstEval, CaseRecord } from './engine';
+import { ARCHIVE_SLOTS } from './cases';
 
 export interface PlayerProfile {
     display_name: string;
-    record: Record<string, { won: boolean }>;
+    record: Record<string, CaseRecord>;
 }
 
 export interface AuthApi {
@@ -29,6 +31,8 @@ export interface AuthApi {
     requestPasswordReset: (email: string) => Promise<string | null>;
     updatePassword: (password: string) => Promise<string | null>;
     isWon: (caseId: string) => boolean;
+    // كل سجلات القضايا المنشورة (فوز + تقييم أول محاولة) — لنظام الرتب.
+    getRecords: () => Record<string, CaseRecord>;
 }
 
 const AuthCtx = createContext<AuthApi | null>(null);
@@ -95,12 +99,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
     }, [loadProfile]);
 
-    // لما لاعب مسجل يكسب قضية، الفوز يتحفظ في سجل حسابه على النظام.
+    // لما لاعب مسجل ينهي محاولة (فوز أو خسارة)، النتيجة بتتحفظ في سجل حسابه
+    // على النظام. تقييم أول محاولة ثابت ومش بيتبدل بالإعادة (mergeCaseRecord).
     // الضيف بيفضل على التخزين المحلي زي ما هو.
     const persistWin = useCallback(
-        (caseId: string) => {
+        (caseId: string, evaluation: CaseFirstEval) => {
             if (!user) return;
-            const record = { ...(profileRef.current?.record ?? {}), [caseId]: { won: true } };
+            const record = { ...(profileRef.current?.record ?? {}) };
+            record[caseId] = mergeCaseRecord(record[caseId], evaluation);
             const name = profileRef.current?.display_name ?? 'محقق';
             setProfile((p) => (p ? { ...p, record } : p));
             // لازم await: باني الاستعلام في supabase-js مبيبعتش الطلب غير لما يتعمله await —
@@ -116,6 +122,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRecordSink(user ? persistWin : null);
         return () => setRecordSink(null);
     }, [user, persistWin]);
+
+    // سجلات القضايا المنشورة كلها: من الحساب للاعب المسجل، ومن الجهاز للضيف.
+    const getRecords = useCallback((): Record<string, CaseRecord> => {
+        if (user) return profileRef.current?.record ?? {};
+        const out: Record<string, CaseRecord> = {};
+        for (const slot of ARCHIVE_SLOTS) {
+            if (slot.state !== 'playable' || !slot.caseId) continue;
+            const rec = loadCaseRecord(slot.caseId);
+            if (rec) out[slot.caseId] = rec;
+        }
+        return out;
+    }, [user]);
 
     const signIn = useCallback(async (email: string, password: string) => {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -173,6 +191,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         requestPasswordReset,
         updatePassword,
         isWon,
+        getRecords,
     };
 
     return <AuthCtx.Provider value={api}>{children}</AuthCtx.Provider>;
