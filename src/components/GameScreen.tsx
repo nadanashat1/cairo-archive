@@ -19,6 +19,11 @@ import photoSaadia from '../photos/2-suspect-saadia.jpg';
 import photoNaguib from '../photos/3-suspect-naguib.jpg';
 import photoAbdu from '../photos/4-suspect-abdu.jpg';
 import photoSawsan from '../photos/5-suspect-sawsan.jpg';
+import photoFouad from '../photos/6-suspect-fouad.jpg';
+import photoSaneya from '../photos/7-suspect-saneya.jpg';
+import photoAbed from '../photos/8-suspect-abed.jpg';
+import photoKaram from '../photos/9-suspect-karam.jpg';
+import photoSabri from '../photos/10-suspect-sabri.jpg';
 
 const PHOTOS: Record<string, string> = {
     sulaiman: photoSulaiman,
@@ -31,6 +36,11 @@ const PHOTOS: Record<string, string> = {
     naguib: photoNaguib,
     abdu: photoAbdu,
     sawsan: photoSawsan,
+    fouad: photoFouad,
+    saneya: photoSaneya,
+    abed: photoAbed,
+    karam: photoKaram,
+    sabri: photoSabri,
 };
 
 // ملاحظات كل لاعب متسجلة تحت حسابه: مفتاح التخزين بياخد هوية المحقق (أو ضيف)
@@ -293,5 +303,6 @@ function SuspectCard(props: {
         </article>
     );
 }
+
 
 
