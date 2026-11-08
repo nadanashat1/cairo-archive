@@ -137,7 +137,7 @@ const PHOTOS: Record<string, string> = {
 // ملاحظات كل لاعب متسجلة تحت حسابه: مفتاح التخزين بياخد هوية المحقق (أو ضيف)
 const notesKey = (caseId: string, scope: string) => `cairo-archive-notes-${caseId}-${scope}`;
 
-export function GameScreen({ caseData, engine, onExit }: { caseData: CaseData; engine: EngineApi; onExit: () => void }) {
+export function GameScreen({ caseData, engine, onExit, preview = false }: { caseData: CaseData; engine: EngineApi; onExit: () => void; preview?: boolean }) {
     const { state, remainingMs, revealedCount, totalClues, visibleClues, envelopesRemaining } = engine;
     const reading = state.status === 'reading';
     const [flashWrong, setFlashWrong] = useState(false);
@@ -213,9 +213,15 @@ export function GameScreen({ caseData, engine, onExit }: { caseData: CaseData; e
                         <h2>🗂️ اقرأ ملف القضية وكروت المشتبه فيهم براحتك</h2>
                         <p>مفيش عد تنازلي دلوقتي. لما تكون جاهز، دوس «ابدأ التحقيق» — الوقت هيبدأ وأول دليل هيظهر فورًا، وباقي الأدلة المعمل الجنائي بيجهزها ورا بعض، وكل ظرف لما يوصل بيفضل مختوم لحد ما تفتحه لما تحس إن اللي معاك مش كفاية. كل ما تفتح أظرف أقل درجة استدلالك تعلا، ولو حليتها قبل آخر ظرف ومن غير ولا اتهام غلط تستاهل لقب «محقق محصلش» 🏆.</p>
                     </div>
-                    <button type="button" className="btn-amber btn-start" onClick={() => engine.start()}>
-                        🕵️ ابدأ التحقيق
-                    </button>
+                    {preview ? (
+                        <button type="button" className="btn-amber btn-start" disabled title="معاينة فقط">
+                            👁️ معاينة فقط — مفيش بدء تحقيق
+                        </button>
+                    ) : (
+                        <button type="button" className="btn-amber btn-start" onClick={() => engine.start()}>
+                            🕵️ ابدأ التحقيق
+                        </button>
+                    )}
                 </section>
             )}
 
@@ -403,6 +409,7 @@ function SuspectCard(props: {
         </article>
     );
 }
+
 
 
 
