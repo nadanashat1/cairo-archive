@@ -30,6 +30,11 @@ import photoHekmat from '../photos/12-suspect-hekmat.jpg';
 import photoNabil from '../photos/13-suspect-nabil.jpg';
 import photoAnwar from '../photos/14-suspect-anwar.jpg';
 import photoFathi from '../photos/15-suspect-fathi.jpg';
+import photoLeila from '../photos/16-suspect-leila.jpg';
+import photoShokry from '../photos/17-suspect-shokry.jpg';
+import photoAziza from '../photos/18-suspect-aziza.jpg';
+import photoGhani from '../photos/19-suspect-ghani.jpg';
+import photoBahgat from '../photos/20-suspect-bahgat.jpg';
 
 const PHOTOS: Record<string, string> = {
     sulaiman: photoSulaiman,
@@ -52,6 +57,11 @@ const PHOTOS: Record<string, string> = {
     nabil: photoNabil,
     anwar: photoAnwar,
     fathi: photoFathi,
+    leila: photoLeila,
+    shokry: photoShokry,
+    aziza: photoAziza,
+    ghani: photoGhani,
+    bahgat: photoBahgat,
 };
 
 // ملاحظات كل لاعب متسجلة تحت حسابه: مفتاح التخزين بياخد هوية المحقق (أو ضيف)
