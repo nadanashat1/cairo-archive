@@ -81,6 +81,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile({ display_name: name, record: (data?.record as PlayerProfile['record']) ?? {} });
     }, []);
 
+    // تنظيف علامات تشخيص مؤقتة قديمة (مش بتأثر على تسجيل الدخول)
+    useEffect(() => {
+        try { sessionStorage.removeItem('ca-login-flag'); sessionStorage.removeItem('ca-token-after-login'); localStorage.removeItem('ca-login-flag'); document.cookie = 'ca_login=; max-age=0; path=/'; } catch { /* ignore */ }
+    }, []);
+
     useEffect(() => {
         let mounted = true;
         void supabase.auth.getSession().then(async ({ data }) => {
@@ -168,7 +173,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const signOut = useCallback(async () => {
-        try { sessionStorage.removeItem('ca-login-flag'); localStorage.removeItem('ca-login-flag'); document.cookie = 'ca_login=; max-age=0; path=/'; } catch { /* ignore */ }
         await supabase.auth.signOut();
         setUser(null);
         setProfile(null);
@@ -214,5 +218,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return <AuthCtx.Provider value={api}>{children}</AuthCtx.Provider>;
 }
+
 
 
