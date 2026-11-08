@@ -168,7 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const signOut = useCallback(async () => {
-        try { sessionStorage.removeItem('ca-login-flag'); localStorage.removeItem('ca-login-flag'); } catch { /* ignore */ }
+        try { sessionStorage.removeItem('ca-login-flag'); localStorage.removeItem('ca-login-flag'); document.cookie = 'ca_login=; max-age=0; path=/'; } catch { /* ignore */ }
         await supabase.auth.signOut();
         setUser(null);
         setProfile(null);
