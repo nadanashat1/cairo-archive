@@ -439,35 +439,28 @@ function SuspectCard(props: {
     );
 }
 
-function makeRidges(seed: number, kind: 'whorl' | 'loop'): string[] {
+function makeRidges(seed: number, kind: 'whorl' | 'loop'): { d: string; w: number; o: number }[] {
     let s = seed * 9301 + 49297;
     const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
     const ph = [0, 1, 2, 3].map(() => rnd() * 6.28);
-    const cx = 60, cy = 78;
-    const paths: string[] = [];
-    for (let k = 1; k <= 22; k++) {
-        const r = k * 2.9;
-        let d = '';
-        for (let i = 0; i <= 360; i += 4) {
-            const a = (i * Math.PI) / 180;
-            const wob = 1 + 0.05 * Math.sin(3 * a + ph[0]) + 0.03 * Math.sin(5 * a + ph[1]);
-            const rx = r * 0.82 * wob;
-            const ry = r * 1.12 * wob;
-            let x: number;
-            let y: number;
-            if (kind === 'loop') {
-                x = cx + rx * Math.sin(a);
-                y = cy - ry * Math.cos(a);
-                if (Math.cos(a) < 0) y = cy + ry * 0.55 * -Math.cos(a) * 1.6 + k * 0.4;
-            } else {
-                x = cx + rx * Math.sin(a) + k * 0.15 * Math.sin(a * 2 + ph[2]);
-                y = cy - ry * Math.cos(a);
-            }
-            d += `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)} `;
-        }
-        paths.push(d);
+    const cx = 60 + (rnd() - 0.5) * 10, cy = 78 + (rnd() - 0.5) * 10;
+    const rot = rnd() * 6.28;
+    const gap = 3.05, turns = 20;
+    const out: { d: string; w: number; o: number }[] = [];
+    let d = '', w = 1.35;
+    for (let i = 0; i <= turns * 45; i++) {
+        if (i > 0 && i % 45 === 0) { out.push({ d, w, o: 0.7 + rnd() * 0.28 }); d = ''; w = 1.05 + rnd() * 0.5; }
+        const a = rot + (i / 45) * Math.PI * 2;
+        const r = 2.2 + (i / 45) * gap;
+        const wob = 1 + 0.07 * Math.sin(3 * a + ph[0]) + 0.045 * Math.sin(6 * a + ph[1]) + 0.02 * Math.sin(11 * a + ph[2]);
+        const rx = r * (kind === 'loop' ? 0.8 : 0.92) * wob;
+        const ry = r * (kind === 'loop' ? 1.28 : 1.12) * wob;
+        const x = cx + rx * Math.sin(a) + (kind === 'loop' ? r * 0.22 : 0);
+        const y = cy - ry * Math.cos(a);
+        d += `${d ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)} `;
     }
-    return paths;
+    if (d) out.push({ d, w, o: 0.7 + rnd() * 0.28 });
+    return out;
 }
 
 function Fingerprint(props: { seed: number; kind: 'whorl' | 'loop' }) {
@@ -485,8 +478,8 @@ function Fingerprint(props: { seed: number; kind: 'whorl' | 'loop' }) {
                     <feGaussianBlur stdDeviation="0.35" />
                 </filter>
             </defs>
-            <g clipPath={`url(#c-${id})`} filter={`url(#n-${id})`} fill="none" stroke="#1c1712" strokeWidth="1.7" opacity=".82" strokeLinecap="round">
-                {ridges.map((d, i) => <path key={i} d={d} />)}
+            <g clipPath={`url(#c-${id})`} filter={`url(#n-${id})`} fill="none" stroke="#241b12" strokeLinecap="round">
+                {ridges.map((p, i) => <path key={i} d={p.d} strokeWidth={p.w} opacity={p.o} />)}
             </g>
         </svg>
     );
@@ -497,7 +490,12 @@ function SuspectDossier(props: { suspect: Suspect; number: number; onClose: () =
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
         window.addEventListener('keydown', onKey);
-        return () => window.removeEventListener('keydown', onKey);
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => {
+            window.removeEventListener('keydown', onKey);
+            document.body.style.overflow = previousOverflow;
+        };
     }, [onClose]);
     const seed = suspect.name.split('').reduce((a, c) => a + c.charCodeAt(0), 7) % 997;
     return createPortal(
@@ -531,7 +529,7 @@ function SuspectDossier(props: { suspect: Suspect; number: number; onClose: () =
                             </div>
                         </div>
                     </div>
-                    <div className="dossier-foot"><span>للتوثيق فقط - البصمات للزينة ومفيهاش أدلة جديدة</span><span>أرشيف القاهرة · ١٩٥٢</span></div>
+                    <div className="dossier-foot"><span>أرشيف القاهرة · ١٩٥٢</span></div>
                 </div>
             </div>
         </div>,
