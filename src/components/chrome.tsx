@@ -5,6 +5,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { noirAudio } from '../game/audio';
 import { useAuth } from '../game/auth';
+import { rankInfo, rankProgressLine } from '../game/ranks';
+import { toArabicNumeral } from './ArchiveScreen';
 
 export function TopStrip() {
     return (
@@ -101,7 +103,9 @@ export function AudioControl() {
 }
 
 export function GameHeader({ activeTab, caseTitle, onNavigate }: { activeTab: 'case' | 'archive' | 'records'; caseTitle?: string; onNavigate: (tab: 'case' | 'archive' | 'records') => void }) {
-    const { displayName, signOut } = useAuth();
+    const { displayName, signOut, getRecords } = useAuth();
+    const rank = rankInfo(getRecords());
+    const rankProgress = rankProgressLine(rank, toArabicNumeral);
     return (
         <header className="game-header anim-fade-down">
             <div className="header-identity">
@@ -112,6 +116,9 @@ export function GameHeader({ activeTab, caseTitle, onNavigate }: { activeTab: 'c
                         <span className="chip chip-secret">ملف سري ٤٢٤#</span>
                     </div>
                     <div className="header-sub">المحقق: {displayName} · القضية: {caseTitle ?? 'أسورة الهانم'}</div>
+                    <div className="header-sub rank-line" title="رتبتك في الأرشيف والتقدم نحو الرتبة الجاية">
+                        🎖️ {rank.name}{rankProgress ? ` · ${rankProgress}` : ' · أعلى رتبة في الأرشيف'}
+                    </div>
                 </div>
             </div>
             <nav className="header-nav" aria-label="التنقل الرئيسي">
