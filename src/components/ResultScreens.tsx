@@ -144,3 +144,40 @@ export function LossScreen({ caseData, onRetry, onArchive }: {
     );
 }
 
+
+
+export function SolutionScreen({ caseData, onBack }: { caseData: CaseData; onBack: () => void }) {
+    const culprit = caseData.suspects.find((s) => s.id === caseData.culpritId)!;
+    const culpritLabel = caseData.culpritRoleLabel ?? 'الجاني الحقيقي';
+    return (
+        <main className="result-screen screen-enter">
+            <div className="result-head">
+                <span className="chip chip-gold">📖 شرح الحل</span>
+                <h1 className="display-title anim-fade-up">قضية {toArabicNumeral(caseData.number)}: {caseData.title}</h1>
+            </div>
+
+            <section className="culprit-panel anim-fade-up" aria-label="ملف الجاني">
+                <span className="chip chip-gold">ملف المتهم</span>
+                <h2>{culprit.name} — {culpritLabel}</h2>
+                <p>{caseData.winText}</p>
+                <p className="culprit-summary">{caseData.culpritSummary}</p>
+            </section>
+
+            <section className="elimination-panel anim-fade-up" aria-label="سلسلة الاستنتاج">
+                <h2>🧩 سلسلة الاستنتاج والأدلة القاطعة</h2>
+                <ol className="elim-list">
+                    {caseData.eliminationRows.map((row, i) => (
+                        <li key={i}>
+                            <b className="gold-text">{row.clueTitle}</b>
+                            <p>{row.detail}</p>
+                        </li>
+                    ))}
+                </ol>
+            </section>
+
+            <section className="result-actions anim-fade-up">
+                <button type="button" className="btn-dark" onClick={onBack}>← رجوع لسجل الإدانات</button>
+            </section>
+        </main>
+    );
+}
