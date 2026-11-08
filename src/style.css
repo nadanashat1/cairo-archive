@@ -309,7 +309,15 @@ html, body, #root { margin: 0; min-height: 100%; }
 .btn-accuse { font-size: 17px; }
 .accuse-note { margin: 0; font-size: 11px; color: var(--nvr-muted); }
 
-.notes-drawer { margin-top: 14px; background: var(--nvr-card); border: 1px solid var(--nvr-border); border-radius: 12px; padding: 14px 16px; }
+.notes-fab {
+    position: fixed; left: 20px; bottom: 20px; z-index: 40;
+    width: 46px; height: 46px; border-radius: 50%; padding: 0; font-size: 20px; line-height: 1;
+    display: grid; place-items: center; cursor: pointer;
+    background: var(--nvr-card); border: 1px solid var(--nvr-gold-2); color: var(--nvr-gold);
+    box-shadow: 0 4px 14px #0006; transition: transform .15s, border-color .2s;
+}
+.notes-fab:hover, .notes-fab.is-open { transform: translateY(-1px); border-color: var(--nvr-gold); }
+.notes-drawer { position: fixed; left: 20px; bottom: 78px; z-index: 40; width: min(360px, calc(100vw - 40px)); background: var(--nvr-card); border: 1px solid var(--nvr-border); border-radius: 12px; padding: 14px 16px; box-shadow: 0 8px 24px #0008; }
 .notes-drawer h3 { margin: 0 0 10px; font-size: 15px; color: var(--nvr-gold); }
 .notes-drawer textarea {
     width: 100%; background: var(--nvr-bg); color: var(--nvr-text);
