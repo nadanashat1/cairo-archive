@@ -536,9 +536,9 @@ html, body, #root { margin: 0; min-height: 100%; }
 .dossier-folder{position:relative;width:min(820px,100%);margin:auto;font-family:'Cairo',sans-serif}
 .dossier-back{position:absolute;inset:0;background:linear-gradient(160deg,#56382a,#3a2418);border-radius:6px 14px 10px 10px;box-shadow:0 30px 70px #000d,inset 0 0 0 1px #1d100a,inset 0 0 40px #0006}
 .dossier-tab{position:absolute;right:60px;top:-30px;width:210px;height:36px;background:linear-gradient(#56382a,#4a2f22);border-radius:12px 12px 0 0;text-align:center;line-height:36px;font-family:'Rakkas','Cairo',serif;color:#e2b765;font-size:17px;box-shadow:inset 0 0 0 1px #1d100a}
-.dossier-sheet{position:relative;margin:34px;background:radial-gradient(circle at 30% 20%,#ece5d3,#ded4bc 70%,#cfc4a8);border-radius:3px;box-shadow:0 3px 14px #0006;padding:30px 40px 44px;color:#2b2012;direction:rtl}
-.dossier-clip{position:absolute;right:46px;top:-26px;width:22px;height:84px;border:4px solid #9aa0a8;border-radius:12px;box-shadow:1px 2px 3px #0006;pointer-events:none}
-.dossier-clip:after{content:"";position:absolute;left:3px;top:20px;width:8px;height:56px;border:3px solid #9aa0a8;border-radius:8px}
+.dossier-sheet{position:relative;margin:34px;background:radial-gradient(circle at 30% 20%,#ece5d3,#ded4bc 70%,#cfc4a8);border-radius:3px;box-shadow:0 3px 14px #0006;padding:46px 40px 44px;color:#2b2012;direction:rtl}
+.dossier-clip{position:absolute;right:46px;top:-26px;width:22px;height:62px;border:4px solid #9aa0a8;border-radius:12px;box-shadow:1px 2px 3px #0006;pointer-events:none}
+.dossier-clip:after{content:"";position:absolute;left:3px;top:14px;width:8px;height:40px;border:3px solid #9aa0a8;border-radius:8px}
 .dossier-close{position:absolute;left:-14px;top:-14px;width:40px;height:40px;border-radius:50%;background:#1c2236;border:2px solid #e2b765;color:#e2b765;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px #000a;padding:0}
 .dossier-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px double #6b4f26;padding-bottom:14px;gap:12px}
 .dossier-title small{display:block;font-size:13px;color:#7b6035}
@@ -561,7 +561,7 @@ html, body, #root { margin: 0; min-height: 100%; }
 .dossier-print svg{display:block;margin:0 auto 4px;mix-blend-mode:multiply;width:96px;height:auto}
 .dossier-foot{position:absolute;bottom:14px;right:40px;left:40px;display:flex;justify-content:space-between;font-size:12px;color:#7b6035;gap:10px}
 @media (max-width:680px){
-  .dossier-sheet{margin:26px 12px;padding:22px 18px 52px}
+  .dossier-sheet{margin:26px 12px;padding:30px 18px 52px}
   .dossier-title h2{font-size:34px}
   .dossier-stamp{font-size:18px;padding:1px 10px}
   .dossier-body{flex-direction:column;gap:20px}
