@@ -139,33 +139,63 @@ function reducer(s: RoundState, a: RoundAction): RoundState {
 const storageKey = (caseId: string) => `cairo-archive-round-${caseId}`;
 const recordKey = (caseId: string) => `cairo-archive-record-${caseId}`;
 
+// تقييم أول محاولة في القضية — ثابت ومش بيتبدل بالإعادة (قاعدة اللاعبة).
+// يتسجل عند نهاية أول محاولة مكتملة (فوز أو خسارة). لو أول محاولة خسرت،
+// الفوز اللاحق بيفتح القضية اللي بعدها بس مش بيحسّن التقييم.
+export interface CaseFirstEval {
+    outcome: 'won' | 'lost';
+    wrongAccusations: number;
+    cluesUsed: number;   // الأدلة اللي اتكشفت فعلًا (أول دليل + الأظرف المفتوحة)
+    totalClues: number;  // كل أدلة الجولة
+    qualified: boolean;  // فوز قبل آخر ظرف ومن غير ولا اتهام غلط
+    at: string;          // توقيت تسجيل التقييم
+}
+
+export interface CaseRecord {
+    won: boolean;
+    firstEval?: CaseFirstEval;
+}
+
 // سجل الإدانة: نتيجة الفوز بتتخزن وتفضل حتى لو اللاعب بدأ من جديد.
 // الضيف: تخزين محلي على الجهاز. اللاعب المسجل: نظام الحسابات بيسجّل
 // حفظ السيرفر عن طريق setRecordSink، والتخزين المحلي بيتخطّى.
-type RecordSink = (caseId: string) => void;
+type RecordSink = (caseId: string, evaluation: CaseFirstEval) => void;
 let recordSink: RecordSink | null = null;
 export function setRecordSink(sink: RecordSink | null) {
     recordSink = sink;
 }
 
-function saveRecord(caseId: string) {
+// دمج ثابت: الفوز بيفضل فوز، وتقييم أول محاولة مبيتحدّثش أبدًا.
+export function mergeCaseRecord(existing: CaseRecord | null | undefined, evaluation: CaseFirstEval): CaseRecord {
+    return { won: !!existing?.won || evaluation.outcome === 'won', firstEval: existing?.firstEval ?? evaluation };
+}
+
+function saveRecord(caseId: string, evaluation: CaseFirstEval) {
     if (recordSink) {
-        recordSink(caseId);
+        recordSink(caseId, evaluation);
         return;
     }
-    try { localStorage.setItem(recordKey(caseId), JSON.stringify({ won: true })); } catch { /* التخزين المحلي مش متاح */ }
+    try {
+        const existing = loadCaseRecord(caseId);
+        localStorage.setItem(recordKey(caseId), JSON.stringify(mergeCaseRecord(existing, evaluation)));
+    } catch { /* التخزين المحلي مش متاح */ }
+}
+
+// القراءة الكاملة لسجل قضية (فوز + تقييم) — للضيف من التخزين المحلي.
+export function loadCaseRecord(caseId: string): CaseRecord | null {
+    try {
+        const rec = localStorage.getItem(recordKey(caseId));
+        if (rec) return JSON.parse(rec) as CaseRecord;
+        // توافق مع النسخة الأقدم: الفوز كان بيتخزن جوّه لقطة الجولة نفسها
+        const legacy = localStorage.getItem(storageKey(caseId));
+        return legacy && JSON.parse(legacy).status === 'won' ? { won: true } : null;
+    } catch {
+        return null;
+    }
 }
 
 export function loadRecord(caseId: string): boolean {
-    try {
-        const rec = localStorage.getItem(recordKey(caseId));
-        if (rec) return !!JSON.parse(rec).won;
-        // توافق مع النسخة الأقدم: الفوز كان بيتخزن جوّه لقطة الجولة نفسها
-        const legacy = localStorage.getItem(storageKey(caseId));
-        return !!legacy && JSON.parse(legacy).status === 'won';
-    } catch {
-        return false;
-    }
+    return !!loadCaseRecord(caseId)?.won;
 }
 
 export function clearSavedRound(caseId: string) {
@@ -218,16 +248,28 @@ export function useGameEngine(caseData: CaseData, settings: GameSettings = DEFAU
         if (state.status === 'playing' && remainingMs <= 0) dispatch({ type: 'timeout' });
     }, [remainingMs, state.status]);
 
-    // حفظ سجل الإدانة عند الفوز (مش الجولة نفسها — الجولة بتبدأ من الأول كل مرة)
-    useEffect(() => {
-        if (state.status === 'won') saveRecord(caseData.id);
-    }, [caseData.id, state.status]);
-
     const allClues = useMemo(
         () => (state.withExtraClue ? [...caseData.clues, caseData.extraClue] : caseData.clues),
         [caseData, state.withExtraClue],
     );
     const revealedCount = revealedCountOf(state, allClues.length);
+
+    // حفظ السجل عند نهاية المحاولة (فوز أو خسارة) — تقييم أول محاولة ثابت،
+    // والدمج بيحافظ عليه في saveRecord. الجولة نفسها بتبدأ من الأول كل مرة.
+    useEffect(() => {
+        if (state.status !== 'won' && state.status !== 'lost') return;
+        const won = state.status === 'won';
+        const totalClues = allClues.length;
+        const cluesUsed = revealedCount;
+        saveRecord(caseData.id, {
+            outcome: won ? 'won' : 'lost',
+            wrongAccusations: state.wrongAccusations,
+            cluesUsed,
+            totalClues,
+            qualified: won && cluesUsed < totalClues && state.wrongAccusations === 0,
+            at: new Date().toISOString(),
+        });
+    }, [caseData.id, state.status, allClues.length, revealedCount, state.wrongAccusations]);
     const envelopesRemaining = Math.max(0, allClues.length - revealedCount);
     const elapsedMsNow = elapsedMsOf(state, now);
     const prepRemainingMs =
