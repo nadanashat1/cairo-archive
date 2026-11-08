@@ -4,8 +4,9 @@
 // التنقل بين شاشة اللعب وشاشات النتيجة.
 // ============================================================================
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { getCase, CASE_HANEM_BRACELET, ARCHIVE_SLOTS, type CaseData } from './game/cases';
+import { rankInfo, type RankInfo } from './game/ranks';
 import { useGameEngine, clearSavedRound } from './game/engine';
 import { AuthProvider, useAuth } from './game/auth';
 import { noirAudio } from './game/audio';
@@ -21,8 +22,21 @@ type Screen = 'archive' | 'game' | 'records';
 function GameFlow({ caseData, onArchive }: { caseData: CaseData; onArchive: () => void }) {
     const engine = useGameEngine(caseData);
     const s = engine.state;
+    const { getRecords } = useAuth();
+    // رتبة اللاعب لحظة دخول القضية — عشان نعرف لو الفوز ده سبب ترقية.
+    const rankAtEntry = useRef<RankInfo | null>(null);
+    if (rankAtEntry.current === null) rankAtEntry.current = rankInfo(getRecords());
 
     if (s.status === 'won') {
+        const infoNow = rankInfo(getRecords());
+        let rankNotice: string | null = null;
+        if (infoNow.id !== rankAtEntry.current.id) {
+            rankNotice = `مبروك الترقية يا حضرة المحقق! بقيت رسميًا «${infoNow.name}»`;
+        } else if (infoNow.id === 'veteran' && infoNow.needQualifying === 1 && infoNow.needSolved <= 1) {
+            rankNotice = 'عينك لاقطة وخيطك مظبوط، فاضلك قضية بالمستوى ده وتترقّى';
+        } else if (infoNow.id === 'rookie' && infoNow.needSolved === 1) {
+            rankNotice = 'عينك لاقطة وخيطك مظبوط، فاضلك قضية واحدة وتترقّى لـ«محقق متمرّس»';
+        }
         return (
             <WinScreen
                 caseData={caseData}
@@ -30,6 +44,7 @@ function GameFlow({ caseData, onArchive }: { caseData: CaseData; onArchive: () =
                 wrongAccusations={s.wrongAccusations}
                 cluesUsed={engine.revealedCount}
                 totalClues={engine.totalClues}
+                rankNotice={rankNotice}
                 onReplay={() => engine.restart(false)}
                 onArchive={onArchive}
             />
