@@ -20,9 +20,13 @@ function PasswordInput({ value, onChange, label, autoComplete }: { value: string
                 aria-label={shown ? 'إخفاء كلمة السر' : 'إظهار كلمة السر'}
                 aria-pressed={shown}
                 title={shown ? 'إخفاء كلمة السر' : 'إظهار كلمة السر'}
-                style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: 4, color: 'inherit' }}
+                style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', lineHeight: 1, padding: 4, color: '#c9a24b', opacity: 0.8 }}
             >
-                {shown ? '🙈' : '👁️'}
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
+                    <circle cx="12" cy="12" r="3" />
+                    {!shown && <line x1="3" y1="3" x2="21" y2="21" />}
+                </svg>
             </button>
         </span>
     );
