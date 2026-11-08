@@ -315,6 +315,13 @@ export function GameScreen({ caseData, engine, onExit, preview = false }: { case
             </section>
 
             {!reading && (
+                <div className={`timer-float ${lowTime ? 'is-low' : ''}`} aria-hidden>
+                    <span>⏱</span>
+                    <b>{formatClock(remainingMs)}</b>
+                </div>
+            )}
+
+            {!reading && (
                 <button
                     type="button"
                     className={`notes-fab ${notesOpen ? 'is-open' : ''}`}
