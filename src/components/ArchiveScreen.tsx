@@ -15,6 +15,7 @@ import caseCasino from '../photos/4-case-5-casino.png';
 import casePainting from '../photos/5-case-6-painting.png';
 import caseOpera from '../photos/6-case-7-opera.png';
 import caseHotel from '../photos/7-case-8-hotel.png';
+import caseQena from '../photos/8-case-9-qena.png';
 
 const CASE_ART: Record<number, { src: string; alt: string }> = {
     2: { src: caseTea, alt: 'فنجان شاي جنب زجاجة سم على صينية نحاس — جو قضية سم في فنجان الشاي' },
@@ -24,6 +25,7 @@ const CASE_ART: Record<number, { src: string; alt: string }> = {
     6: { src: casePainting, alt: 'إطار لوحة دهب فاضي على حيطة قصر — جو قضية اختفاء لوحة الباشا' },
     7: { src: caseOpera, alt: 'علبة جواهر مخمل فاضية قدام الأوبرا — جو قضية سرقة جواهر أوبرا الخديوي' },
     8: { src: caseHotel, alt: 'شنطة مفتوحة فاضية في بهو فندق فخم — جو قضية جريمة فندق رويال' },
+    9: { src: caseQena, alt: 'مركب شراعي راسي في مرسى نيلي ليلي على ضوء فانوس — جو قضية آخر مركب لقنا' },
 };
 
 export function ArchiveScreen({ onPlay }: { onPlay: (caseId: string) => void }) {
