@@ -3,8 +3,10 @@
 // التايمر مبني على الوقت الفعلي (Date.now) مش عدّاد لفات، عشان ميحصلش تسريع
 // أو بطء. كل دخول للقضية أو تحديث للصفحة بيبدأ جولة جديدة من مرحلة القراءة —
 // مفيش استكمال لجولة قديمة، بس سجل الإدانة (الفوز) محفوظ على الجهاز.
-// الأدلة: أول دليل يظهر فور بدء التحقيق، والباقي في أظرف مختومة بيفتحها اللاعب
-// عند الطلب والتايمر شغال — فتح أظرف أقل يرفع التقييم النهائي.
+// الأدلة: أول دليل يظهر فور بدء التحقيق، وكل ظرف بعده المعمل الجنائي بيجهزه
+// بعد فاصل ثابت — لما يجهز يظهر مختوم ويفضل مقفول لحد ما اللاعب يفتحه بإيده،
+// وفتحه بيبدأ تجهيز اللي بعده. التايمر شغال طول الوقت، وفتح أظرف أقل يرفع
+// التقييم النهائي.
 // ============================================================================
 
 import { useEffect, useMemo, useReducer, useRef } from 'react';
@@ -14,11 +16,13 @@ import type { CaseData } from './cases';
 export interface GameSettings {
     roundSeconds: number;          // مدة الجولة كاملة
     wrongAccusePenaltySeconds: number; // خصم الاتهام الغلط
+    clueIntervalSeconds: number;   // وقت تجهيز كل ظرف في المعمل
 }
 
 export const DEFAULT_SETTINGS: GameSettings = {
     roundSeconds: 180,
     wrongAccusePenaltySeconds: 20,
+    clueIntervalSeconds: 25,
 };
 
 export type RoundStatus = 'reading' | 'playing' | 'won' | 'lost';
@@ -32,6 +36,7 @@ export interface RoundState {
     selected: string | null;   // المتهم المختار
     wrongAccusations: number;
     openedClues: number;       // عدد الأظرف اللي اللاعب فتحها (غير أول دليل الفوري)
+    prepEndsAtElapsedMs: number | null; // لحظة جاهزية الظرف الجاي بالوقت المنقضي — null لما مفيش أظرف ورا
     withExtraClue: boolean;    // جولة إعادة بعد خسارة مع دليل إضافي
     wonWithRemainingMs: number;
     lastWrongAt: number;       // طابع آخر اتهام غلط (لتأثير الواجهة)
@@ -41,12 +46,12 @@ export type RoundAction =
     | { type: 'exclude'; suspectId: string }
     | { type: 'undoExclude'; suspectId: string }
     | { type: 'select'; suspectId: string | null }
-    | { type: 'openClue'; maxTotal: number }
+    | { type: 'openClue'; maxTotal: number; intervalMs: number; atElapsed: number }
     | { type: 'accuse'; suspectId: string; culpritId: string; penaltyMs: number }
     | { type: 'timeout' }
     | { type: 'restart'; withExtraClue: boolean }
     | { type: 'restore'; state: RoundState }
-    | { type: 'start' };
+    | { type: 'start'; intervalMs: number };
 
 function freshRound(withExtraClue: boolean): RoundState {
     return {
@@ -60,6 +65,7 @@ function freshRound(withExtraClue: boolean): RoundState {
         selected: null,
         wrongAccusations: 0,
         openedClues: 0,
+        prepEndsAtElapsedMs: null,
         withExtraClue,
         wonWithRemainingMs: 0,
         lastWrongAt: 0,
@@ -77,7 +83,7 @@ export function remainingMsOf(s: RoundState, settings: GameSettings, now: number
 }
 
 // عدد الأدلة الظاهرة: أول دليل فوري عند بدء التحقيق، والباقي بيتحكم فيه اللاعب
-// عن طريق فتح الأظرف المختومة — مفيش ظهور تلقائي بالوقت.
+// عن طريق فتح الأظرف المختومة بعد ما تتجهز — مفيش ظهور تلقائي لمحتوى الدليل.
 export function revealedCountOf(s: RoundState, totalClues: number): number {
     if (s.status === 'reading') return 0; // مفيش أدلة قبل بدء التحقيق
     return Math.max(1, Math.min(totalClues, 1 + s.openedClues));
@@ -88,7 +94,8 @@ function reducer(s: RoundState, a: RoundAction): RoundState {
         case 'start':
             // بدء التحقيق: التايمر يبدأ من اللحظة دي بالوقت الفعلي، وأول دليل يظهر فورًا.
             if (s.status !== 'reading') return s;
-            return { ...s, status: 'playing', startedAtMs: Date.now() };
+            // مع بدء التحقيق أول دليل يظهر فورًا، والمعمل بيبدأ تجهيز أول ظرف.
+            return { ...s, status: 'playing', startedAtMs: Date.now(), prepEndsAtElapsedMs: a.intervalMs };
         case 'exclude':
             if (s.status !== 'playing' || s.excluded.includes(a.suspectId)) return s;
             return { ...s, excluded: [...s.excluded, a.suspectId], selected: s.selected === a.suspectId ? null : s.selected };
@@ -99,9 +106,13 @@ function reducer(s: RoundState, a: RoundAction): RoundState {
             if (s.status !== 'playing' || s.excluded.includes(a.suspectId ?? '')) return s;
             return { ...s, selected: a.suspectId };
         case 'openClue':
-            // فتح ظرف: التايمر مبيقفش — الفتح قرار اللاعب، وتأثيره على التقييم مش على الوقت.
+            // فتح ظرف: مسموح بس بعد ما المعمل يخلص تجهيزه. الفتح قرار اللاعب
+            // والتايمر مبيقفش — ومن لحظة الفتح المعمل بيبدأ تجهيز الظرف اللي بعده.
             if (s.status !== 'playing' || 1 + s.openedClues >= a.maxTotal) return s;
-            return { ...s, openedClues: s.openedClues + 1 };
+            if (s.prepEndsAtElapsedMs === null || a.atElapsed < s.prepEndsAtElapsedMs) return s;
+            const openedNow = s.openedClues + 1;
+            const moreComing = 1 + openedNow < a.maxTotal;
+            return { ...s, openedClues: openedNow, prepEndsAtElapsedMs: moreComing ? a.atElapsed + a.intervalMs : null };
         case 'accuse': {
             if (s.status !== 'playing' || s.excluded.includes(a.suspectId)) return s;
             // حماية من الضغط المتكرر السريع: اتهام واحد كل ١٫٥ ثانية كحد أقصى.
@@ -170,6 +181,9 @@ export interface EngineApi {
     totalClues: number;
     visibleClues: CaseData['clues'];
     envelopesRemaining: number; // أظرف لسه مقفولة
+    envelopeReady: boolean;     // فيه ظرف خلص تجهيزه ومستني اللاعب يفتحه
+    prepRemainingMs: number | null; // المتبقي على جاهزية الظرف الجاي (null لو مفيش تجهيز شغال)
+    prepTotalMs: number;        // مدة التجهيز الكاملة (لشريط التقدم)
     exclude: (id: string) => void;
     undoExclude: (id: string) => void;
     select: (id: string | null) => void;
@@ -215,23 +229,36 @@ export function useGameEngine(caseData: CaseData, settings: GameSettings = DEFAU
     );
     const revealedCount = revealedCountOf(state, allClues.length);
     const envelopesRemaining = Math.max(0, allClues.length - revealedCount);
+    const elapsedMsNow = elapsedMsOf(state, now);
+    const prepRemainingMs =
+        state.status === 'playing' && state.prepEndsAtElapsedMs !== null && elapsedMsNow < state.prepEndsAtElapsedMs
+            ? state.prepEndsAtElapsedMs - elapsedMsNow
+            : null;
+    const envelopeReady =
+        state.status === 'playing' &&
+        state.prepEndsAtElapsedMs !== null &&
+        elapsedMsNow >= state.prepEndsAtElapsedMs &&
+        envelopesRemaining > 0;
 
     return {
         state,
         now,
         remainingMs,
-        elapsedMs: elapsedMsOf(state, now),
+        elapsedMs: elapsedMsNow,
         revealedCount,
         totalClues: allClues.length,
         visibleClues: allClues.slice(0, revealedCount),
         envelopesRemaining,
+        envelopeReady,
+        prepRemainingMs,
+        prepTotalMs: settings.clueIntervalSeconds * 1000,
         exclude: (id) => dispatch({ type: 'exclude', suspectId: id }),
         undoExclude: (id) => dispatch({ type: 'undoExclude', suspectId: id }),
         select: (id) => dispatch({ type: 'select', suspectId: id }),
         accuse: (id) => dispatch({ type: 'accuse', suspectId: id, culpritId: caseData.culpritId, penaltyMs: settings.wrongAccusePenaltySeconds * 1000 }),
         restart: (withExtra) => { clearSavedRound(caseData.id); dispatch({ type: 'restart', withExtraClue: withExtra }); },
-        start: () => dispatch({ type: 'start' }),
-        openClue: () => dispatch({ type: 'openClue', maxTotal: allClues.length }),
+        start: () => dispatch({ type: 'start', intervalMs: settings.clueIntervalSeconds * 1000 }),
+        openClue: () => dispatch({ type: 'openClue', maxTotal: allClues.length, intervalMs: settings.clueIntervalSeconds * 1000, atElapsed: elapsedMsOf(stateRef.current, Date.now()) }),
     };
 }
 
@@ -242,4 +269,5 @@ export function formatClock(ms: number): string {
     const s = total % 60;
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
+
 
