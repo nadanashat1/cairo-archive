@@ -29,7 +29,9 @@ export function WinScreen({ caseData, remainingMs, wrongAccusations, cluesUsed, 
     const cluePenalty = Math.round((40 * envelopesOpened) / totalEnvelopes); // حتى ٤٠ درجة، نسبة لعدد أظرف القضية
     const wrongPenalty = Math.min(20, 10 * wrongAccusations); // حتى ٢٠ درجة
     const deductionScore = Math.max(5, 100 - cluePenalty - wrongPenalty);
-    const stars = !openedAll ? 3 : deductionScore >= 50 ? 2 : 1;
+    // اللقب الأعلى محجوز لمن حل قبل آخر ظرف ومن غير ولا اتهام غلط —
+    // التخمين الأعمى ممكن يكسب بالضغط على الوقت، بس مش ياخد لقب محصلش.
+    const stars = !openedAll && wrongAccusations === 0 ? 3 : deductionScore >= 50 ? 2 : 1;
     const rating = stars === 3 ? 'محقق محصلش' : stars === 2 ? 'محقق شاطر' : 'محقق مثابر';
 
     return (
