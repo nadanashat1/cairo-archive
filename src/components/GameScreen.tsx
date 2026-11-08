@@ -315,23 +315,20 @@ export function GameScreen({ caseData, engine, onExit, preview = false }: { case
             </section>
 
             {!reading && (
-                <div className={`timer-float ${lowTime ? 'is-low' : ''}`} aria-hidden>
-                    <span>⏱</span>
-                    <b>{formatClock(remainingMs)}</b>
+                <div className={`timer-float ${lowTime ? 'is-low' : ''}`}>
+                    <span aria-hidden>⏱</span>
+                    <b aria-label="الوقت المتبقي">{formatClock(remainingMs)}</b>
+                    <button
+                        type="button"
+                        className={`notes-fab ${notesOpen ? 'is-open' : ''}`}
+                        onClick={() => setNotesOpen((v) => !v)}
+                        aria-label="دفتر ملاحظاتي"
+                        aria-expanded={notesOpen}
+                        title="دفتر ملاحظاتي"
+                    >
+                        📝
+                    </button>
                 </div>
-            )}
-
-            {!reading && (
-                <button
-                    type="button"
-                    className={`notes-fab ${notesOpen ? 'is-open' : ''}`}
-                    onClick={() => setNotesOpen((v) => !v)}
-                    aria-label="دفتر ملاحظاتي"
-                    aria-expanded={notesOpen}
-                    title="دفتر ملاحظاتي"
-                >
-                    📝
-                </button>
             )}
 
             {notesOpen && !reading && (
