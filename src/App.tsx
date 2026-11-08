@@ -15,9 +15,9 @@ import { toArabicNumeral } from './components/ArchiveScreen';
 import { EntryScreen } from './components/EntryScreen';
 import { ArchiveScreen } from './components/ArchiveScreen';
 import { GameScreen } from './components/GameScreen';
-import { WinScreen, LossScreen } from './components/ResultScreens';
+import { WinScreen, LossScreen, SolutionScreen } from './components/ResultScreens';
 
-type Screen = 'archive' | 'game' | 'records';
+type Screen = 'archive' | 'game' | 'records' | 'solution';
 
 // معاينة قصة قضية لصاحبة الحساب بس (بدون بدء تحقيق ولا أي حفظ في السجل).
 const PREVIEW_OWNER_EMAIL = 'nadanashat15@gmail.com';
@@ -72,7 +72,7 @@ function GameFlow({ caseData, onArchive }: { caseData: CaseData; onArchive: () =
     return <GameScreen caseData={caseData} engine={engine} onExit={onArchive} />;
 }
 
-function RecordsScreen({ onArchive }: { onArchive: () => void }) {
+function RecordsScreen({ onArchive, onOpen }: { onArchive: () => void; onOpen: (caseId: string) => void }) {
     // سجل الإدانات: للاعب المسجل من حسابه على النظام، وللضيف من الجهاز.
     // كل قضية متاحة وليها سجلها الخاص المتعزول بمفتاح القضية.
     const { isWon } = useAuth();
@@ -88,10 +88,18 @@ function RecordsScreen({ onArchive }: { onArchive: () => void }) {
                     const culprit = caseData.suspects.find((c) => c.id === caseData.culpritId)!;
                     const label = caseData.recordLabel ?? 'الجاني';
                     return (
-                        <article className="record-card anim-rise" key={caseData.id}>
+                        <article
+                            className="record-card record-card-open anim-rise"
+                            key={caseData.id}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => onOpen(caseData.id)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(caseData.id); } }}
+                        >
                             <span className="chip chip-gold">إدانة مؤكدة ✓</span>
                             <h2>قضية {toArabicNumeral(caseData.number)}: {caseData.title}</h2>
                             <p>{label}: {culprit.name} — اتقفلت بالأدلة الجنائية.</p>
+                            <p className="record-hint">📖 اضغط لقراءة شرح الحل</p>
                         </article>
                     );
                 })
@@ -113,6 +121,7 @@ export function App() {
 function AppInner() {
     const [screen, setScreen] = useState<Screen>('archive');
     const [activeCase, setActiveCase] = useState<CaseData | null>(null);
+    const [solutionCaseId, setSolutionCaseId] = useState<string | null>(null);
     const { user, ready, recovery, isWon } = useAuth();
     const previewId = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('preview') : null;
     const previewCase = user && !recovery && user.email === PREVIEW_OWNER_EMAIL && previewId && PREVIEW_CASE_IDS.includes(previewId) ? getCase(previewId) : null;
@@ -145,7 +154,7 @@ function AppInner() {
         <div className="noir-app" dir="rtl" lang="ar">
             <TopStrip />
             <GameHeader
-                activeTab={screen === 'game' ? 'case' : screen === 'records' ? 'records' : 'archive'}
+                activeTab={screen === 'game' ? 'case' : screen === 'records' || screen === 'solution' ? 'records' : 'archive'}
                 caseTitle={activeCase?.title}
                 onNavigate={(tab) => {
                     if (tab === 'archive') goArchive();
@@ -165,7 +174,10 @@ function AppInner() {
             {!previewCase && screen === 'archive' && (
                 <ArchiveScreen onPlay={(caseId) => { setActiveCase(getCase(caseId)); setScreen('game'); }} />
             )}
-            {screen === 'records' && <RecordsScreen onArchive={goArchive} />}
+            {screen === 'records' && <RecordsScreen onArchive={goArchive} onOpen={(id) => { setSolutionCaseId(id); setScreen('solution'); }} />}
+            {screen === 'solution' && solutionCaseId && isWon(solutionCaseId) && (
+                <SolutionScreen caseData={getCase(solutionCaseId)} onBack={() => setScreen('records')} />
+            )}
             {screen === 'game' && activeCase && (
                 <GameFlow key={`${activeCase.id}`} caseData={activeCase} onArchive={goArchive} />
             )}
