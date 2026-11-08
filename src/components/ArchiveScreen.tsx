@@ -16,6 +16,9 @@ import casePainting from '../photos/5-case-6-painting.png';
 import caseOpera from '../photos/6-case-7-opera.png';
 import caseHotel from '../photos/7-case-8-hotel.png';
 import caseQena from '../photos/8-case-9-qena.png';
+import caseCinema from '../photos/16-9-case-10-cinema.png';
+import caseNewsroom from '../photos/17-10-case-11-newsroom.png';
+import caseSaqia from '../photos/18-11-case-12-saqia.png';
 
 const CASE_ART: Record<number, { src: string; alt: string }> = {
     2: { src: caseTea, alt: 'فنجان شاي جنب زجاجة سم على صينية نحاس — جو قضية سم في فنجان الشاي' },
@@ -26,6 +29,9 @@ const CASE_ART: Record<number, { src: string; alt: string }> = {
     7: { src: caseOpera, alt: 'علبة جواهر مخمل فاضية قدام الأوبرا — جو قضية سرقة جواهر أوبرا الخديوي' },
     8: { src: caseHotel, alt: 'شنطة مفتوحة فاضية في بهو فندق فخم — جو قضية جريمة فندق رويال' },
     9: { src: caseQena, alt: 'مركب شراعي راسي في مرسى نيلي ليلي على ضوء فانوس — جو قضية آخر مركب لقنا' },
+    10: { src: caseCinema, alt: 'واجهة سينما ليلية بلافتة مضيئة وبوستر فيلم — جو قضية مشهد ما اتعرضش' },
+    11: { src: caseNewsroom, alt: 'آلة كاتبة قديمة على مكتب صحفي في نور مصباح — جو قضية حرف تحت السطر' },
+    12: { src: caseSaqia, alt: 'ساقية على ترعة وقت الفجر في قرية مصرية — جو قضية نوبة السقيا' },
 };
 
 export function ArchiveScreen({ onPlay }: { onPlay: (caseId: string) => void }) {
@@ -87,5 +93,6 @@ export function toArabicNumeral(n: number): string {
     const digits = '٠١٢٣٤٥٦٧٨٩';
     return String(n).split('').map((d) => digits[Number(d)] ?? d).join('');
 }
+
 
 
