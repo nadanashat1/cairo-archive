@@ -7,6 +7,27 @@ import React, { useState } from 'react';
 import cover from '../photos/case-cover.jpg';
 import { useAuth } from '../game/auth';
 
+
+// حقل كلمة سر بزرار إظهار/إخفاء (الافتراضي مخفي). الزرار type=button فمبيعملش إرسال للفورم.
+function PasswordInput({ value, onChange, label, autoComplete }: { value: string; onChange: (v: string) => void; label: string; autoComplete: string }) {
+    const [shown, setShown] = useState(false);
+    return (
+        <span style={{ position: 'relative', display: 'block' }}>
+            <input dir="ltr" type={shown ? 'text' : 'password'} value={value} onChange={(e) => onChange(e.target.value)} aria-label={label} autoComplete={autoComplete} style={{ width: '100%', paddingRight: 44, boxSizing: 'border-box' }} />
+            <button
+                type="button"
+                onClick={() => setShown((v) => !v)}
+                aria-label={shown ? 'إخفاء كلمة السر' : 'إظهار كلمة السر'}
+                aria-pressed={shown}
+                title={shown ? 'إخفاء كلمة السر' : 'إظهار كلمة السر'}
+                style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: 4, color: 'inherit' }}
+            >
+                {shown ? '🙈' : '👁️'}
+            </button>
+        </span>
+    );
+}
+
 export function EntryScreen({ onEnter }: { onEnter: () => void }) {
     const { signIn, signUp, signOut, recovery, requestPasswordReset, updatePassword } = useAuth();
     const [mode, setMode] = useState<'login' | 'signup'>('login');
@@ -150,12 +171,12 @@ export function EntryScreen({ onEnter }: { onEnter: () => void }) {
                         </div>
                         <label className="field">
                             <span className="field-label">كلمة السر الجديدة 🗝️</span>
-                            <input dir="ltr" type="password" value={password} onChange={(e) => setPassword(e.target.value)} aria-label="كلمة السر الجديدة" autoComplete="new-password" />
+                            <PasswordInput value={password} onChange={setPassword} label="كلمة السر الجديدة" autoComplete={"new-password"} />
                             <span className="field-hint">٦ أحرف على الأقل، وتتخزن مشفرة على النظام.</span>
                         </label>
                         <label className="field">
                             <span className="field-label">تأكيد كلمة السر 🔁</span>
-                            <input dir="ltr" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} aria-label="تأكيد كلمة السر" autoComplete="new-password" />
+                            <PasswordInput value={confirm} onChange={setConfirm} label="تأكيد كلمة السر" autoComplete={"new-password"} />
                         </label>
                         {error && <p className="entry-error" role="alert">{error}</p>}
                         <button type="button" className="btn-gold" onClick={() => void submitNewPassword()} disabled={busy}>
@@ -201,7 +222,7 @@ export function EntryScreen({ onEnter }: { onEnter: () => void }) {
 
                     <label className="field">
                         <span className="field-label">رمز الخزينة (كلمة السر) 🗝️</span>
-                        <input dir="ltr" type="password" value={password} onChange={(e) => setPassword(e.target.value)} aria-label="كلمة السر" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
+                        <PasswordInput value={password} onChange={setPassword} label="كلمة السر" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
                         {mode === 'signup' && <span className="field-hint">٦ أحرف على الأقل، وتتخزن مشفرة على النظام.</span>}
                     </label>
 
@@ -222,7 +243,7 @@ export function EntryScreen({ onEnter }: { onEnter: () => void }) {
                     {mode === 'signup' && (
                         <label className="field">
                             <span className="field-label">تأكيد كلمة السر 🔁</span>
-                            <input dir="ltr" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} aria-label="تأكيد كلمة السر" autoComplete="new-password" />
+                            <PasswordInput value={confirm} onChange={setConfirm} label="تأكيد كلمة السر" autoComplete={"new-password"} />
                         </label>
                     )}
 
@@ -260,3 +281,4 @@ export function EntryScreen({ onEnter }: { onEnter: () => void }) {
         </div>
     );
 }
+
