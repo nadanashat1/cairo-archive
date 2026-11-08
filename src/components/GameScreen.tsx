@@ -143,6 +143,14 @@ export function GameScreen({ caseData, engine, onExit, preview = false }: { case
     const reading = state.status === 'reading';
     const [flashWrong, setFlashWrong] = useState(false);
     const [notesOpen, setNotesOpen] = useState(false);
+    const [mainTimerVisible, setMainTimerVisible] = useState(true);
+    useEffect(() => {
+        const el = document.querySelector('.timer-card');
+        if (!el || typeof IntersectionObserver === 'undefined') return;
+        const io = new IntersectionObserver(([entry]) => setMainTimerVisible(entry.isIntersecting));
+        io.observe(el);
+        return () => io.disconnect();
+    }, [reading]);
     const { user } = useAuth();
     const notesScope = user?.id ?? 'guest';
     const [notes, setNotes] = useState(() => { try { return localStorage.getItem(notesKey(caseData.id, notesScope)) ?? ''; } catch { return ''; } });
@@ -318,7 +326,7 @@ export function GameScreen({ caseData, engine, onExit, preview = false }: { case
                 <p className="accuse-note">تنبيه المحقق: توجيه اتهام خاطئ يخصم {toArabicNumeral(DEFAULT_SETTINGS.wrongAccusePenaltySeconds)} ثانية فورًا — الخطأ في تحديد الجاني بيكلفك وقتًا وقد يضيّع القضية.</p>
             </section>
 
-            {!reading && createPortal(
+            {!reading && !mainTimerVisible && createPortal(
                 <div className={`timer-float ${lowTime ? 'is-low' : ''}`}>
                     <span aria-hidden>⏱</span>
                     <b aria-label="الوقت المتبقي">{formatClock(remainingMs)}</b>
@@ -336,7 +344,7 @@ export function GameScreen({ caseData, engine, onExit, preview = false }: { case
                 document.body,
             )}
 
-            {notesOpen && !reading && createPortal(
+            {notesOpen && !reading && !mainTimerVisible && createPortal(
                 <section className="notes-drawer anim-pop" aria-label="دفتر الملاحظات">
                     <h3>📝 دفتر ملاحظاتي</h3>
                     <textarea
