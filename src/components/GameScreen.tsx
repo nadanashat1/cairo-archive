@@ -4,6 +4,7 @@
 // ============================================================================
 
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { CaseData, Clue, Suspect } from '../game/cases';
 import { formatClock, DEFAULT_SETTINGS, type EngineApi } from '../game/engine';
 import { noirAudio } from '../game/audio';
@@ -212,6 +213,9 @@ export function GameScreen({ caseData, engine, onExit, preview = false }: { case
                     <div className="start-banner-text">
                         <h2>🗂️ اقرأ ملف القضية وكروت المشتبه فيهم براحتك</h2>
                         <p>مفيش عد تنازلي دلوقتي. لما تكون جاهز، دوس «ابدأ التحقيق» — الوقت هيبدأ وأول دليل هيظهر فورًا، وباقي الأدلة المعمل الجنائي بيجهزها ورا بعض، وكل ظرف لما يوصل بيفضل مختوم لحد ما تفتحه لما تحس إن اللي معاك مش كفاية. كل ما تفتح أظرف أقل درجة استدلالك تعلا، ولو حليتها قبل آخر ظرف ومن غير ولا اتهام غلط تستاهل لقب «محقق محصلش» 🏆.</p>
+                        {state.withExtraClue && (
+                            <p className="extra-clue-note">✅ اتضاف لك دليل إضافي في المحاولة دي — هيظهر ضمن الأدلة بعد ما تدوس «ابدأ التحقيق».</p>
+                        )}
                     </div>
                     {preview ? (
                         <button type="button" className="btn-amber btn-start" disabled title="معاينة فقط">
@@ -314,7 +318,7 @@ export function GameScreen({ caseData, engine, onExit, preview = false }: { case
                 <p className="accuse-note">تنبيه المحقق: توجيه اتهام خاطئ يخصم {toArabicNumeral(DEFAULT_SETTINGS.wrongAccusePenaltySeconds)} ثانية فورًا — الخطأ في تحديد الجاني بيكلفك وقتًا وقد يضيّع القضية.</p>
             </section>
 
-            {!reading && (
+            {!reading && createPortal(
                 <div className={`timer-float ${lowTime ? 'is-low' : ''}`}>
                     <span aria-hidden>⏱</span>
                     <b aria-label="الوقت المتبقي">{formatClock(remainingMs)}</b>
@@ -328,10 +332,11 @@ export function GameScreen({ caseData, engine, onExit, preview = false }: { case
                     >
                         📝
                     </button>
-                </div>
+                </div>,
+                document.body,
             )}
 
-            {notesOpen && !reading && (
+            {notesOpen && !reading && createPortal(
                 <section className="notes-drawer anim-pop" aria-label="دفتر الملاحظات">
                     <h3>📝 دفتر ملاحظاتي</h3>
                     <textarea
@@ -343,7 +348,8 @@ export function GameScreen({ caseData, engine, onExit, preview = false }: { case
                         placeholder="سجّل ملاحظاتك عن الأدلة والمشتبه فيهم هنا…"
                         rows={5}
                     />
-                </section>
+                </section>,
+                document.body,
             )}
         </main>
     );
