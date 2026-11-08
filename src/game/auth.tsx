@@ -103,7 +103,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const record = { ...(profileRef.current?.record ?? {}), [caseId]: { won: true } };
             const name = profileRef.current?.display_name ?? 'محقق';
             setProfile((p) => (p ? { ...p, record } : p));
-            void supabase.from('player_progress').upsert({ user_id: user.id, display_name: name, record });
+            // لازم await: باني الاستعلام في supabase-js مبيبعتش الطلب غير لما يتعمله await —
+            // من غيره الفوز كان بيتسجل في الواجهة بس ومبيتحفظش على النظام.
+            void (async () => {
+                await supabase.from('player_progress').upsert({ user_id: user.id, display_name: name, record });
+            })();
         },
         [user],
     );
@@ -173,3 +177,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return <AuthCtx.Provider value={api}>{children}</AuthCtx.Provider>;
 }
+
