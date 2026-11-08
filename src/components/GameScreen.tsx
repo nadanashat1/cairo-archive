@@ -35,11 +35,11 @@ import photoShokry from '../photos/17-suspect-shokry.jpg';
 import photoAziza from '../photos/18-suspect-aziza.jpg';
 import photoGhani from '../photos/19-suspect-ghani.jpg';
 import photoBahgat from '../photos/20-suspect-bahgat.jpg';
-import photoFawzia from '../photos/21-suspect-fawzia.jpg';
-import photoRashad from '../photos/22-suspect-rashad.jpg';
-import photoToto from '../photos/23-suspect-toto.jpg';
-import photoAbdo from '../photos/24-suspect-abdo.jpg';
-import photoMedhat from '../photos/25-suspect-medhat.jpg';
+import photoFawzia from '../photos/6-21-suspect-fawzia.jpg';
+import photoRashad from '../photos/2-22-suspect-rashad.jpg';
+import photoToto from '../photos/3-23-suspect-toto.jpg';
+import photoAbdo from '../photos/4-24-suspect-abdo.jpg';
+import photoMedhat from '../photos/5-25-suspect-medhat.jpg';
 
 const PHOTOS: Record<string, string> = {
     sulaiman: photoSulaiman,
